@@ -87,7 +87,7 @@
 <meta property="og:description" content="fuzzy">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-01-19T08:58:17.000Z">
-<meta property="article:modified_time" content="2024-01-22T12:34:47.271Z">
+<meta property="article:modified_time" content="2024-01-23T11:08:09.619Z">
 <meta property="article:author" content="enllus1on">
 <meta name="twitter:card" content="summary">
 
@@ -297,8 +297,8 @@
               
                 <span class="post-meta-item-text">Post modified&#58;</span>
               
-              <time title="Post modified" itemprop="dateModified" datetime="2024-01-22T20:34:47+08:00">
-                2024-01-22
+              <time title="Post modified" itemprop="dateModified" datetime="2024-01-23T19:08:09+08:00">
+                2024-01-23
               </time>
             
           </span>
@@ -347,7 +347,7 @@
                   <span class="post-meta-item-text">Words count in article&#58;</span>
                 
                 <span title="Words count in article">
-                  548
+                  1.4k
                 </span>
               
 
@@ -363,7 +363,7 @@
                   <span class="post-meta-item-text">Reading time &asymp;</span>
                 
                 <span title="Reading time">
-                  2
+                  6
                 </span>
               
             </div>
@@ -406,7 +406,53 @@
 <p>插入的IR Instruction效果如下：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cur_location = &lt;COMPILE_TIME_RANDOM&gt;; </span><br><span class="line">shared_mem[cur_location ^ prev_location]++; </span><br><span class="line">prev_location = cur_location &gt;&gt; <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
 
+<h2 id="afl-llvm-rt"><a href="#afl-llvm-rt" class="headerlink" title="afl-llvm-rt"></a>afl-llvm-rt</h2><p><code>LLVM_MODE</code>有额外三种模式分别是<code>deffered instrumentation</code>、<code>persistent mode</code>、<code>trace-pc-guard</code></p>
+<h3 id="deferred-instrumentation"><a href="#deferred-instrumentation" class="headerlink" title="deferred instrumentation"></a>deferred instrumentation</h3><p>推迟<code>forkserver</code>的启动，启动时机为程序初始化工作后，但是在main函数之前。这样减少了初始化的开销或者程序解析<code>fuzz data</code>的开销</p>
+<p>选好合适的位置，插入下面的代码，即可启用该模式</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifdef</span> __AFL_HAVE_MANUAL_CONTROL</span></span><br><span class="line">  __AFL_INIT();</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
 
+<p><code>__AFL_INIT</code>调用<code>__afl_manual_init</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __afl_manual_init(<span class="type">void</span>) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">static</span> u8 init_done;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!init_done) &#123;</span><br><span class="line"></span><br><span class="line">    __afl_map_shm();</span><br><span class="line">    __afl_start_forkserver();</span><br><span class="line">    init_done = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>__afl_map_shm</code>函数读取环境变量<code> &quot;__AFL_SHM_ID&quot;</code>来获得<code>shm_id</code>，然后调用<code>shmat</code>获取共享内存赋值给<code>_afl_area_ptr</code>。</p>
+<p><code>__afl_start_forkserver</code>逻辑如下：</p>
+<ul>
+<li>初始化<code>child_stopped</code>为0，通过<code>FORKSRV_FD + 1</code>fd向管道写入4个字节，告知<code>afl fuzz</code> <code>fork server</code>已经准备好开始了。</li>
+<li>进入<code>fuzz loop</code><ul>
+<li>通过<code>FORKSRV_FD</code>fd向管道读入4个字节赋值给<code>was_killed</code></li>
+<li>如果<code>child_stopped</code>和<code>was_killed</code>都不为空值，说明子进程停下了并且发出<code>SIGKILL</code>信号，那么通过<code>waitpid</code>函数回收子进程</li>
+<li>如果<code>child_stopped</code>为空值，那么<code>fork</code>一个子进程，并且关闭子进程与管道的通信，然后子进程退出<code>__afl_start_forkserver</code>函数，执行程序</li>
+<li>如果<code>child_stopped</code>不为空值，通过<code>kill(child_pid, SIGCONT)</code>重启子进程，并设置<code>child_stopped</code>为0。该分支仅针对<code>persistent mode</code>，因为只有该模式不<code>fork</code>完成fuzz，而是复用同一个进程。</li>
+<li>再通过<code>FORKSRV_FD + 1</code>fd向管道写入<code>child_pid</code>，告知<code>afl fuzz</code>子进程的pid。</li>
+<li>等待子进程结束，回收子进程，状态保存在<code>status</code>。如果为<code>persistent mode</code>，那么程序发出<code>SIGSTOP</code>信号，便结束等待，并且将<code>child_stopped</code>设置为1。</li>
+<li>通过<code>FORKSRV_FD + 1</code>fd向管道写入<code>status</code>，告知<code>afl fuzz</code>子进程的状态，并结束此次<code>fuzz</code>。</li>
+</ul>
+</li>
+</ul>
+<h3 id="persistent-mode"><a href="#persistent-mode" class="headerlink" title="persistent mode"></a>persistent mode</h3><p>当程序的某些API是无状态的或者读入不同的输入数据时，API的状态会自动重置，那么这个程序就可以长期存活复用，减少了<code>fork</code>的开销。</p>
+<p>通过向程序插入如下代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (__AFL_LOOP(<span class="number">1000</span>)) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Read input data. */</span></span><br><span class="line">  <span class="comment">/* Call library code to be fuzzed. */</span></span><br><span class="line">  <span class="comment">/* Reset state. */</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>__AFL_LOOP</code>调用<code>__afl_persistent_loop</code>，逻辑如下：</p>
+<ul>
+<li>第一次<code>loop</code>时，如果<code>is_persistent</code>为1，清空<code>__afl_area_pptr</code>，将<code>__afl_area_ptr[0]</code>设置为1，<code>__afl_prev_loc</code>设置为0，<code>cyclic_cnt</code>设置为<code>max_cnt</code>，也就是循环次数。</li>
+<li>不是第一次的<code>loop</code>，<code>--cyclic_cnt</code>，发出信号<code>SIGSTOP</code>，程序暂停，直到程序被重启，将<code>__afl_area_ptr[0]</code>设置为1，<code>__afl_prev_loc</code>设置为0。<ul>
+<li>当<code>cyclic_cnt</code>为0时，也就是结束了所有<code>fuzz</code>时，将<code>__afl_area_ptr</code>指向<code>__afl_area_initial</code>，也就是无用数组，不再记录覆盖率等数据。</li>
+</ul>
+</li>
+</ul>
+<h3 id="trace-pc-guard"><a href="#trace-pc-guard" class="headerlink" title="trace-pc-guard"></a>trace-pc-guard</h3><p>该模式不是通过基本块，而是边来插桩。要使用这个模式需要重新编译<code>LLVM_MODE</code>，通过</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AFL_TRACE_PC=1 make clean all</span><br></pre></td></tr></table></figure>
+
+<p>从而定义了<code>DUSE_TRACE_PC</code>宏，从而在执行<code>afl-clang-fast</code>传入 <code>-fsanitize-coverage=trace-pc-guard</code>参数</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ifdef</span> AFL_TRACE_PC</span><br><span class="line">  CFLAGS    += -DUSE_TRACE_PC=1</span><br><span class="line"><span class="keyword">endif</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="sanitizer-cov-trace-pc-guard"><a href="#sanitizer-cov-trace-pc-guard" class="headerlink" title="__sanitizer_cov_trace_pc_guard"></a>__sanitizer_cov_trace_pc_guard</h4><p>这个函数在经过每条<code>edge</code>都会调用</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __sanitizer_cov_trace_pc_guard(<span class="type">uint32_t</span>* guard) &#123;</span><br><span class="line">  __afl_area_ptr[*guard]++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过<code>guard</code>指向的值确定共享内存对应的索引</p>
+<h4 id="sanitizer-cov-trace-pc-guard-init"><a href="#sanitizer-cov-trace-pc-guard-init" class="headerlink" title="__sanitizer_cov_trace_pc_guard_init"></a>__sanitizer_cov_trace_pc_guard_init</h4><p>该函数来初始化<code>guard</code>指向的值</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __sanitizer_cov_trace_pc_guard_init(<span class="type">uint32_t</span>* start, <span class="type">uint32_t</span>* stop) &#123;</span><br><span class="line"></span><br><span class="line">  u32 inst_ratio = <span class="number">100</span>;</span><br><span class="line">  u8* x;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (start == stop || *start) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  x = <span class="built_in">getenv</span>(<span class="string">&quot;AFL_INST_RATIO&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (x) inst_ratio = <span class="built_in">atoi</span>(x);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!inst_ratio || inst_ratio &gt; <span class="number">100</span>) &#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(stderr, <span class="string">&quot;[-] ERROR: Invalid AFL_INST_RATIO (must be 1-100).\n&quot;</span>);</span><br><span class="line">    <span class="built_in">abort</span>();</span><br><span class="line">  &#125;</span><br><span class="line">    </span><br><span class="line">  <span class="comment">/* Make sure that the first element in the range is always set - we use that</span></span><br><span class="line"><span class="comment">     to avoid duplicate calls (which can happen as an artifact of the underlying</span></span><br><span class="line"><span class="comment">     implementation in LLVM). */</span></span><br><span class="line"></span><br><span class="line">  *(start++) = <span class="built_in">R</span>(MAP_SIZE - <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (start &lt; stop) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">R</span>(<span class="number">100</span>) &lt; inst_ratio) *start = <span class="built_in">R</span>(MAP_SIZE - <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span> *start = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    start++;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
       
@@ -647,7 +693,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li></ol></div>
             
 
           </div>
@@ -688,7 +734,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">15.7k</span>
+    <span title="Site words total count">16.5k</span>
   
 </div>
 
