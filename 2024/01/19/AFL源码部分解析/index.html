@@ -87,7 +87,7 @@
 <meta property="og:description" content="fuzzy">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-01-19T08:58:17.000Z">
-<meta property="article:modified_time" content="2024-01-23T11:08:09.619Z">
+<meta property="article:modified_time" content="2024-01-28T10:34:05.980Z">
 <meta property="article:author" content="enllus1on">
 <meta name="twitter:card" content="summary">
 
@@ -297,8 +297,8 @@
               
                 <span class="post-meta-item-text">Post modified&#58;</span>
               
-              <time title="Post modified" itemprop="dateModified" datetime="2024-01-23T19:08:09+08:00">
-                2024-01-23
+              <time title="Post modified" itemprop="dateModified" datetime="2024-01-28T18:34:05+08:00">
+                2024-01-28
               </time>
             
           </span>
@@ -347,7 +347,7 @@
                   <span class="post-meta-item-text">Words count in article&#58;</span>
                 
                 <span title="Words count in article">
-                  1.4k
+                  2.6k
                 </span>
               
 
@@ -363,7 +363,7 @@
                   <span class="post-meta-item-text">Reading time &asymp;</span>
                 
                 <span title="Reading time">
-                  6
+                  11
                 </span>
               
             </div>
@@ -454,7 +454,152 @@
 <h4 id="sanitizer-cov-trace-pc-guard-init"><a href="#sanitizer-cov-trace-pc-guard-init" class="headerlink" title="__sanitizer_cov_trace_pc_guard_init"></a>__sanitizer_cov_trace_pc_guard_init</h4><p>该函数来初始化<code>guard</code>指向的值</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __sanitizer_cov_trace_pc_guard_init(<span class="type">uint32_t</span>* start, <span class="type">uint32_t</span>* stop) &#123;</span><br><span class="line"></span><br><span class="line">  u32 inst_ratio = <span class="number">100</span>;</span><br><span class="line">  u8* x;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (start == stop || *start) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  x = <span class="built_in">getenv</span>(<span class="string">&quot;AFL_INST_RATIO&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (x) inst_ratio = <span class="built_in">atoi</span>(x);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!inst_ratio || inst_ratio &gt; <span class="number">100</span>) &#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(stderr, <span class="string">&quot;[-] ERROR: Invalid AFL_INST_RATIO (must be 1-100).\n&quot;</span>);</span><br><span class="line">    <span class="built_in">abort</span>();</span><br><span class="line">  &#125;</span><br><span class="line">    </span><br><span class="line">  <span class="comment">/* Make sure that the first element in the range is always set - we use that</span></span><br><span class="line"><span class="comment">     to avoid duplicate calls (which can happen as an artifact of the underlying</span></span><br><span class="line"><span class="comment">     implementation in LLVM). */</span></span><br><span class="line"></span><br><span class="line">  *(start++) = <span class="built_in">R</span>(MAP_SIZE - <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (start &lt; stop) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">R</span>(<span class="number">100</span>) &lt; inst_ratio) *start = <span class="built_in">R</span>(MAP_SIZE - <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span> *start = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    start++;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<h1 id="afl-fuzz"><a href="#afl-fuzz" class="headerlink" title="afl-fuzz"></a>afl-fuzz</h1><h2 id="setup-shm"><a href="#setup-shm" class="headerlink" title="setup_shm"></a>setup_shm</h2><ul>
+<li>如果<code>in_bitmap</code>为空，则将<code>virgin_bits</code>初始化每<code>bit</code>都为1。</li>
+<li>初始化<code>virgin_tmout、virgin_crash</code>每<code>bit</code>为1。</li>
+<li>通过<code>shmget</code>开辟一块读写共享内存，返回改内存块对应的共享标识符到<code>shm_id</code>。注册<code>atexit handler</code>为<code>remove_shm</code>，用来当程序结束时，删除共享内存块。</li>
+<li>如果<code>dumb_mode</code>为空，则设置<code>SHM_ENV_VAR</code>为<code>shm_id</code>。</li>
+<li>通过<code>shmat</code>获取对该共享内存的访问，并将共享内存地址赋值给<code>trace_bits</code></li>
+</ul>
+<h2 id="perform-dry-run"><a href="#perform-dry-run" class="headerlink" title="perform_dry_run"></a>perform_dry_run</h2><p>执行所有测试用例，检查是否正常工作</p>
+<ul>
+<li>打开<code>q-&gt;fname</code>，并读取内容到<code>use_mem</code></li>
+<li><code>res = calibrate_case(argv, q, use_mem, 0, 1)</code>校准测试用例</li>
+<li>如果<code>res</code>为<code>crash_mode</code>或<code>FAULT_NOBITS</code>，则输出<code>SAYF(cGRA &quot;    len = %u, map size = %u, execspeed = %llu us\n&quot; cRST, q-&gt;len, q-&gt;bitmap_size, q-&gt;exec_us);</code></li>
+<li>根据<code>res</code>判断错误结果：<ul>
+<li><code>FAULT_NONE</code>：<ul>
+<li>如果<code>q</code>是第一个测试用例，则调用<code>check_map_coverage</code>，评估<code>map coverage</code>：<ul>
+<li>如果<code>trace_bits</code>路径数小于100，则直接返回</li>
+<li><code>trace_bits</code>数组中后半段有值，则直接返回</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>FAULT_TMOUT</code>:<ul>
+<li>如果指定了<code>-t</code>参数，则<code>timeout_given</code>参数设置为<code>2</code>，则警告<code>Test case results in a timeout (skipping)</code>，<code>q-&gt;cal_failed</code>设置为<code>CAL_CHANCES</code>，<code>cal_failures</code>计数++。</li>
+</ul>
+</li>
+<li><code>FAULT_CRASH</code>:<ul>
+<li>抛出异常<code>FATAL(&quot;Test case &#39;%s&#39; results in a crash&quot;, fn);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_ERROR</code>:<ul>
+<li>抛出异常<code>FATAL(&quot;Unable to execute target application (&#39;%s&#39;)&quot;, argv[0]);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_NOINST</code>：<ul>
+<li>抛出异常<code>FATAL(&quot;No instrumentation detected&quot;);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_NOBITS</code>:<ul>
+<li>没有出现路径信息，说明这个测试样例是无用的。<code>useless_at_start++</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果<code>q-&gt;var_behavior</code>不为空，则说明该测试用例在相同条件下，多次执行，有不同的路径记录，抛出警告<code>WARNF(&quot;Instrumentation output varies across runs.&quot;);</code></li>
+<li><code>q = q-&gt;next</code>，执行下个测试样例</li>
+</ul>
+<h2 id="calibrate-case"><a href="#calibrate-case" class="headerlink" title="calibrate_case"></a>calibrate_case</h2><ul>
+<li><p>如果<code>q-&gt;exec_cksum == 0</code>说明这个case是第一次运行，设置<code>first_run</code>为1。</p>
+</li>
+<li><p><code>q-&gt;cal-failed++</code></p>
+</li>
+<li><p>设置<code>stage_name</code>为<code>calibration</code>，并且如果<code>fast_cal</code>不为0，则设置<code>stage_max</code>为3否则为8。<code>stage_max</code>是最大校验次数。</p>
+</li>
+<li><p>当<code>dumb_mode != 1 &amp;&amp; !no_forkserver &amp;&amp; !forksrv_pid</code>，调用<code>init_forserver(argv)</code>。也就是不处于<code>dumb_mode</code>并且<code>no_forkserver</code>为空，还未启动<code>forkserver</code>，就初始化<code>forkserver</code>。</p>
+</li>
+<li><p>如果这个<code>queue_entry</code>不来自<code>input</code>文件夹，而是评估新case，则此时<code>q-&gt;exec_cksum</code>不为0，拷贝<code>trace_bits</code>到<code>first_trace</code>，并计算<code>has_new_bits</code>，如果这个值比<code>new_bits</code>大，则更新<code>new_bits</code>为这个值。</p>
+</li>
+<li><p>执行<code>calibrate stage</code>，共<code>stage_max</code>轮</p>
+<ul>
+<li>如果不是第一次执行，就调用<code>show_status</code>。</li>
+<li>调用<code>run_target</code>将结果赋值给<code>fault</code>。</li>
+<li>如果<code>stop_soon</code>不为空或者<code>fault != crash_mode</code>，就跳到<code>abort_calibration</code>标签处。</li>
+<li>如果不处于<code>dumb_mode</code>并且处于第一次循环，并且<code>count_bytes(trace_bits)</code>为0，也就是没有路径记录，则设置<code>fault</code>为<code>FAULT_NOINST</code>，跳到<code>abort_calibration</code>标签处。</li>
+<li>根据当前的<code>trace_bits</code>通过<code>hash32</code>函数计算赋值给<code>cksum</code>。</li>
+<li>如果<code>q-&gt;exec_cksum != cksum</code>说明这个case第一次执行或者这次执行和上次执行的路径不同，则调用<code>has_new_bits(virgin_bits)</code>计算，计算的值如果大于<code>new_bits</code>，则更新<code>new_bits</code>。<ul>
+<li>如果<code>q-&gt;exec_cksum</code>不为0，说明不是第一次执行，说明执行触发的路径可变，则遍历整个<code>shm</code>，如果<code>!var_bytes[i] &amp;&amp; first_trace[i] != trace_bits[i]</code>，则说明当前索引的路径可变，设置<code>var_bytes[i]</code>为1，将<code>stage_max</code>更新为40。将<code>var_detected</code>设置为1。</li>
+<li>否则就是第一次执行，将<code>q-&gt;exec_cksum</code>设置为<code>cksum</code>，将<code>trace_bits</code>当前的路径记录拷贝给<code>first_trace</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>将执行<code>calibrate stage</code>的总时间加到<code>total_cal_us</code>。</p>
+</li>
+<li><p>将执行总次数<code>stage_max</code>加到<code>total_cal_cycles</code>。</p>
+</li>
+<li><p><code>q-&gt;exec_us</code>更新为执行一次的平均时间。       </p>
+</li>
+<li><p><code>q-&gt;bitmap_size</code>更新为覆盖的路径数。</p>
+</li>
+<li><p><code>q-&gt;cal_failed</code>设置为0。</p>
+</li>
+<li><p><code>total_bitmap_size</code>加上<code>q-&gt;bitmap_size</code>。</p>
+</li>
+<li><p><code>total_bitmap_entries++</code>。</p>
+</li>
+<li><p><code>update_bitmap_score(q)</code></p>
+</li>
+<li><p>如果<code>!dumb_mode &amp;&amp; first_run &amp;&amp; !fault &amp;&amp; !new_bits</code>，则设置<code>fault</code>为<code>FAULT_NOBITS</code>。</p>
+</li>
+<li><p><code>abort_calibration</code>：</p>
+<ul>
+<li>如果<code>new_bits == 2 &amp;&amp; !q-&gt;has_new_cov</code>，说明当前<code>queue</code>发现了新路径，设置<code>q-&gt;has_new_cov</code>为1，并且<code>queue_with_cov++</code>。</li>
+<li>如果<code>var_detected</code>不为0，<code>var_byte_count</code>赋值为<code>count_bytes(var_bytes)</code>，如果<code>q-&gt;var_behavior</code>为0，调用<code>mark_as_variable(q)</code>，将当前的<code>queue</code>和<code>out_dir/queue/.state/variable_behavior/filename</code>创建符号链接，并且设置<code>q-&gt;var_behavior</code>为1。<code>queued_variable++</code>。</li>
+</ul>
+</li>
+<li><p>返回<code>fault</code>。</p>
+</li>
+</ul>
+<h2 id="init-forkserver"><a href="#init-forkserver" class="headerlink" title="init_forkserver"></a>init_forkserver</h2><ul>
+<li><p>通过<code>pipe</code>函数创建<code>st_pipe</code>状态管道、<code>ctl_pipe</code>控制管道。</p>
+</li>
+<li><p><code>fork</code>进程赋值给<code>forksrv_pid</code></p>
+</li>
+<li><p>当前进程为子进程</p>
+<ul>
+<li><p>重定向标准输出、标准错误到<code>dev_null_ld</code>。如果设置了<code>out_file</code>则重定向标准输入到<code>dev_null_fd</code>，否则重定向到<code>out_fd</code>，并且关闭<code>out_fd</code>。</p>
+</li>
+<li><p>重定向<code>FORKSRV_FD</code>到<code>ctl_pipe[0]</code>，即通过<code>FORKSRV_FD</code>来读取控制管道。</p>
+</li>
+<li><p>重定向<code>FORKSRV_FD + 1</code>到<code>st_pipe[1]</code>，即通过<code>FORKSRV_FD + 1</code>来写入状态管道。</p>
+</li>
+<li><p>关闭不必要的文件描述符。</p>
+<ul>
+<li><pre><code class="c">close(ctl_pipe[0]);
+close(ctl_pipe[1]);
+close(st_pipe[0]);
+close(st_pipe[1]);
 
+close(out_dir_fd);
+close(dev_null_fd);
+close(dev_urandom_fd);
+close(fileno(plot_file));
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p>如果<code>LD_BIND_LAZY</code>环境变量为空，则设置<code>LD_BIND_NOW</code>环境变量为1。</p>
+</li>
+<li><p>设置<code>ASAN_OPTIONS</code>环境变量为<code>abort_on_error=1:</code> <code>detect_leaks=0:</code> <code>symbolize=0:</code> <code>allocator_may_return_null=1</code>，同理设置<code>MSAN_OPTIONS</code>。</p>
+</li>
+<li><p>调用<code>execv(target_path, argv)</code>，替换进程空间，执行<code>target_path</code>。</p>
+</li>
+<li><p>如果调用失败，则将<code>*(u32 *)tarce_bits</code>设置为<code>0xfee1dead</code>，并退出。</p>
+</li>
+</ul>
+</li>
+<li><p>当前进程为父进程</p>
+<ul>
+<li>关闭<code>ctl_pipe[0]</code> <code>st_pipe[1]</code>。</li>
+<li>设置<code>fsrv_ctl_fd</code>为<code>ctl_pipe[1]</code>，设置<code>fsrv_st_fd</code>为<code>st_pipe[0]</code>。</li>
+<li>等待<code>forkserver</code>启动，从<code>fsrv_st_fd</code>读取4个字节到<code>status</code>。</li>
+<li>如果读取长度为4个字节，说明启动成功，返回。</li>
+</ul>
+</li>
+</ul>
+<h2 id="has-new-bits"><a href="#has-new-bits" class="headerlink" title="has_new_bits"></a>has_new_bits</h2><h2 id="count-bytes"><a href="#count-bytes" class="headerlink" title="count_bytes"></a>count_bytes</h2><h2 id="run-target"><a href="#run-target" class="headerlink" title="run_target"></a>run_target</h2>
       
     </div>
     
@@ -693,7 +838,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-fuzz"><span class="nav-number">3.</span> <span class="nav-text">afl-fuzz</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#setup-shm"><span class="nav-number">3.1.</span> <span class="nav-text">setup_shm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#perform-dry-run"><span class="nav-number">3.2.</span> <span class="nav-text">perform_dry_run</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calibrate-case"><span class="nav-number">3.3.</span> <span class="nav-text">calibrate_case</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init-forkserver"><span class="nav-number">3.4.</span> <span class="nav-text">init_forkserver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#has-new-bits"><span class="nav-number">3.5.</span> <span class="nav-text">has_new_bits</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#count-bytes"><span class="nav-number">3.6.</span> <span class="nav-text">count_bytes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#run-target"><span class="nav-number">3.7.</span> <span class="nav-text">run_target</span></a></li></ol></li></ol></div>
             
 
           </div>
@@ -734,7 +879,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">16.5k</span>
+    <span title="Site words total count">17.7k</span>
   
 </div>
 
