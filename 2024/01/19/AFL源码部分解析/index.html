@@ -87,7 +87,7 @@
 <meta property="og:description" content="fuzzy">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-01-19T08:58:17.000Z">
-<meta property="article:modified_time" content="2024-01-31T08:13:45.143Z">
+<meta property="article:modified_time" content="2024-01-31T08:19:03.306Z">
 <meta property="article:author" content="enllus1on">
 <meta name="twitter:card" content="summary">
 
@@ -297,7 +297,7 @@
               
                 <span class="post-meta-item-text">Post modified&#58;</span>
               
-              <time title="Post modified" itemprop="dateModified" datetime="2024-01-31T16:13:45+08:00">
+              <time title="Post modified" itemprop="dateModified" datetime="2024-01-31T16:19:03+08:00">
                 2024-01-31
               </time>
             
@@ -347,7 +347,7 @@
                   <span class="post-meta-item-text">Words count in article&#58;</span>
                 
                 <span title="Words count in article">
-                  5.2k
+                  5.1k
                 </span>
               
 
@@ -363,7 +363,7 @@
                   <span class="post-meta-item-text">Reading time &asymp;</span>
                 
                 <span title="Reading time">
-                  22
+                  21
                 </span>
               
             </div>
@@ -472,106 +472,254 @@
 </li>
 <li><p>如果<code>len</code>等于4，就和<code>interesting_32</code>数组里的元素比较，有相同就直接返回。</p>
 </li>
-<li><pre><code class="c++">struct extra_data
-&#123;
-  u8 *data;    /* Dictionary token data            */
-  u32 len;     /* Dictionary token length          */
-  u32 hit_cnt; /* Use count in the corpus          */
-&#125;;
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- for `i` = 0 to `extra_cnt`，如果`extras[i].len`≥`len`就跳出循环，因为`extras`数组按照长度排序。</span><br><span class="line"></span><br><span class="line">- 继续遍历`i`，如果`i`＜extras_cnt并且`extras[i].len`＝＝`len`，用`memcmp_nocase(extras[i].data, mem, len)`，如果这两个内容是一样的，则直接返回。</span><br><span class="line"></span><br><span class="line">- `auto_changed`置为1。</span><br><span class="line"></span><br><span class="line">- for `i` = 0 to `a_extras_cnt`</span><br><span class="line"></span><br><span class="line">  - 如果`a_extras[i].len`等于`len`并且`a_extras[i].data`和`mem`内容相同</span><br><span class="line">    - `a_extras[i].hit_cnt++`，跳转到`sort_a_extras`</span><br><span class="line"></span><br><span class="line">- 如果`a_extras_cnt`小于`MAX_AUTO_EXTRAS`，说明`a_extras`数组没被填满，则用`mem`、`len`构造新的元素放入这个数组。</span><br><span class="line"></span><br><span class="line">- 否则，从`a_extras`数组后半段随机挑选个元素，将它的`data`替换为`ck_memdup(mem, len)`，长度替换为`len`，`hit_cnt`置为0。</span><br><span class="line"></span><br><span class="line">- `sort_a_extras`</span><br><span class="line"></span><br><span class="line">  - 先用`qsort(a_extras, a_extras_cnt, sizeof(struct extra_data), compare_extras_use_d);`，按照`hit_cnt`递减排序。</span><br><span class="line">  - `qsort(a_extras, MIN(USE_AUTO_EXTRAS, a_extras_cnt),sizeof(struct extra_data), compare_extras_len); `，按照`len`递增排序。</span><br><span class="line"></span><br><span class="line">## perform_dry_run</span><br><span class="line"></span><br><span class="line">执行所有测试用例，检查是否正常工作</span><br><span class="line"></span><br><span class="line">- 打开`q-&gt;fname`，并读取内容到`use_mem`</span><br><span class="line">- `res = calibrate_case(argv, q, use_mem, 0, 1)`校准测试用例</span><br><span class="line">- 如果`res`为`crash_mode`或`FAULT_NOBITS`，则输出`SAYF(cGRA &quot;    len = %u, map size = %u, execspeed = %llu us\n&quot; cRST, q-&gt;len, q-&gt;bitmap_size, q-&gt;exec_us);`</span><br><span class="line">- 根据`res`判断错误结果：</span><br><span class="line">  - `FAULT_NONE`：</span><br><span class="line">    - 如果`q`是第一个测试用例，则调用`check_map_coverage`，评估`map coverage`：</span><br><span class="line">      - 如果`trace_bits`路径数小于100，则直接返回</span><br><span class="line">      - `trace_bits`数组中后半段有值，则直接返回</span><br><span class="line">  - `FAULT_TMOUT`:</span><br><span class="line">    - 如果指定了`-t`参数，则`timeout_given`参数设置为`2`，则警告`Test case results in a timeout (skipping)`，`q-&gt;cal_failed`设置为`CAL_CHANCES`，`cal_failures`计数++。</span><br><span class="line">  - `FAULT_CRASH`:</span><br><span class="line">    - 抛出异常`FATAL(&quot;Test case &#x27;%s&#x27; results in a crash&quot;, fn);`。</span><br><span class="line">  - `FAULT_ERROR`:</span><br><span class="line">    - 抛出异常`FATAL(&quot;Unable to execute target application (&#x27;%s&#x27;)&quot;, argv[0]);`。</span><br><span class="line">  - `FAULT_NOINST`：</span><br><span class="line">    - 抛出异常`FATAL(&quot;No instrumentation detected&quot;);`。</span><br><span class="line">  - `FAULT_NOBITS`:</span><br><span class="line">    - 没有出现路径信息，说明这个测试样例是无用的。`useless_at_start++`。</span><br><span class="line">- 如果`q-&gt;var_behavior`不为空，则说明该测试用例在相同条件下，多次执行，有不同的路径记录，抛出警告`WARNF(&quot;Instrumentation output varies across runs.&quot;);`</span><br><span class="line">- `q = q-&gt;next`，执行下个测试样例</span><br><span class="line"></span><br><span class="line">## calibrate_case</span><br><span class="line"></span><br><span class="line">- 如果`q-&gt;exec_cksum == 0`说明这个case是第一次运行，设置`first_run`为1。</span><br><span class="line"></span><br><span class="line">- `q-&gt;cal-failed++`</span><br><span class="line">- 设置`stage_name`为`calibration`，并且如果`fast_cal`不为0，则设置`stage_max`为3否则为8。`stage_max`是最大校验次数。</span><br><span class="line">- 当`dumb_mode != 1 &amp;&amp; !no_forkserver &amp;&amp; !forksrv_pid`，调用`init_forserver(argv)`。也就是不处于`dumb_mode`并且`no_forkserver`为空，还未启动`forkserver`，就初始化`forkserver`。</span><br><span class="line">- 如果这个`queue_entry`不来自`input`文件夹，而是评估新case，则此时`q-&gt;exec_cksum`不为0，拷贝`trace_bits`到`first_trace`，并计算`has_new_bits`，如果这个值比`new_bits`大，则更新`new_bits`为这个值。</span><br><span class="line">- 执行`calibrate stage`，共`stage_max`轮</span><br><span class="line">  - 如果不是第一次执行，就调用`show_status`。</span><br><span class="line">  - 调用`run_target(argv, use_tmout)`将结果赋值给`fault`。</span><br><span class="line">  - 如果`stop_soon`不为空或者`fault != crash_mode`，就跳到`abort_calibration`标签处。</span><br><span class="line">  - 如果不处于`dumb_mode`并且处于第一次循环，并且`count_bytes(trace_bits)`为0，也就是没有路径记录，则设置`fault`为`FAULT_NOINST`，跳到`abort_calibration`标签处。</span><br><span class="line">  - 根据当前的`trace_bits`通过`hash32(trace_bits, MAP_SIZE, HASH_CONST)`函数计算赋值给`cksum`。</span><br><span class="line">  - 如果`q-&gt;exec_cksum != cksum`说明这个case第一次执行或者这次执行和上次执行的路径不同，则调用`has_new_bits(virgin_bits)`计算，计算的值如果大于`new_bits`，则更新`new_bits`。</span><br><span class="line">    - 如果`q-&gt;exec_cksum`不为0，说明不是第一次执行，说明执行触发的路径可变，则遍历整个`shm`，如果`!var_bytes[i] &amp;&amp; first_trace[i] != trace_bits[i]`，则说明当前索引的路径可变，设置`var_bytes[i]`为1，将`stage_max`更新为40。将`var_detected`设置为1。</span><br><span class="line">    - 否则就是第一次执行，将`q-&gt;exec_cksum`设置为`cksum`，将`trace_bits`当前的路径记录拷贝给`first_trace`。</span><br><span class="line">- 将执行`calibrate stage`的总时间加到`total_cal_us`。</span><br><span class="line">- 将执行总次数`stage_max`加到`total_cal_cycles`。</span><br><span class="line">- `q-&gt;exec_us`更新为执行一次的平均时间。       </span><br><span class="line">- `q-&gt;bitmap_size`更新为覆盖的路径数。</span><br><span class="line">- `q-&gt;cal_failed`设置为0。</span><br><span class="line">- `total_bitmap_size`加上`q-&gt;bitmap_size`。</span><br><span class="line">- `total_bitmap_entries++`。</span><br><span class="line">- `update_bitmap_score(q)`</span><br><span class="line">- 如果`!dumb_mode &amp;&amp; first_run &amp;&amp; !fault &amp;&amp; !new_bits`，则设置`fault`为`FAULT_NOBITS`。</span><br><span class="line">- `abort_calibration`：</span><br><span class="line">  - 如果`new_bits == 2 &amp;&amp; !q-&gt;has_new_cov`，说明当前`queue`发现了新路径，设置`q-&gt;has_new_cov`为1，并且`queue_with_cov++`。</span><br><span class="line">  - 如果`var_detected`不为0，`var_byte_count`赋值为`count_bytes(var_bytes)`，如果`q-&gt;var_behavior`为0，调用`mark_as_variable(q)`，将当前的`queue`和`out_dir/queue/.state/variable_behavior/filename`创建符号链接，并且设置`q-&gt;var_behavior`为1。`queued_variable++`。</span><br><span class="line">- 返回`fault`。</span><br><span class="line"></span><br><span class="line">## init_forkserver</span><br><span class="line"></span><br><span class="line">- 通过`pipe`函数创建`st_pipe`状态管道、`ctl_pipe`控制管道。</span><br><span class="line"></span><br><span class="line">- `fork`进程赋值给`forksrv_pid`</span><br><span class="line"></span><br><span class="line">- 当前进程为子进程</span><br><span class="line"></span><br><span class="line">  - 重定向标准输出、标准错误到`dev_null_ld`。如果设置了`out_file`则重定向标准输入到`dev_null_fd`，否则重定向到`out_fd`，并且关闭`out_fd`。</span><br><span class="line"></span><br><span class="line">  - 重定向`FORKSRV_FD`到`ctl_pipe[0]`，即通过`FORKSRV_FD`来读取控制管道。</span><br><span class="line"></span><br><span class="line">  - 重定向`FORKSRV_FD + 1`到`st_pipe[1]`，即通过`FORKSRV_FD + 1`来写入状态管道。</span><br><span class="line"></span><br><span class="line">  - 关闭不必要的文件描述符。</span><br><span class="line"></span><br><span class="line">    - ```c++</span><br><span class="line">      close(ctl_pipe[0]);</span><br><span class="line">      close(ctl_pipe[1]);</span><br><span class="line">      close(st_pipe[0]);</span><br><span class="line">      close(st_pipe[1]);</span><br><span class="line">      </span><br><span class="line">      close(out_dir_fd);</span><br><span class="line">      close(dev_null_fd);</span><br><span class="line">      close(dev_urandom_fd);</span><br><span class="line">      close(fileno(plot_file));</span><br></pre></td></tr></table></figure>
+<li><p>for <code>i</code> &#x3D; 0 to <code>extra_cnt</code>，如果<code>extras[i].len</code>≥<code>len</code>就跳出循环，因为<code>extras</code>数组按照长度排序。</p>
+</li>
+<li><p>继续遍历<code>i</code>，如果<code>i</code>＜extras_cnt并且<code>extras[i].len</code>＝＝<code>len</code>，用<code>memcmp_nocase(extras[i].data, mem, len)</code>，如果这两个内容是一样的，则直接返回。</p>
+</li>
+<li><p><code>auto_changed</code>置为1。</p>
+</li>
+<li><p>for <code>i</code> &#x3D; 0 to <code>a_extras_cnt</code></p>
+<ul>
+<li>如果<code>a_extras[i].len</code>等于<code>len</code>并且<code>a_extras[i].data</code>和<code>mem</code>内容相同<ul>
+<li><code>a_extras[i].hit_cnt++</code>，跳转到<code>sort_a_extras</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>如果<code>a_extras_cnt</code>小于<code>MAX_AUTO_EXTRAS</code>，说明<code>a_extras</code>数组没被填满，则用<code>mem</code>、<code>len</code>构造新的元素放入这个数组。</p>
+</li>
+<li><p>否则，从<code>a_extras</code>数组后半段随机挑选个元素，将它的<code>data</code>替换为<code>ck_memdup(mem, len)</code>，长度替换为<code>len</code>，<code>hit_cnt</code>置为0。</p>
+</li>
+<li><p><code>sort_a_extras</code></p>
+<ul>
+<li>先用<code>qsort(a_extras, a_extras_cnt, sizeof(struct extra_data), compare_extras_use_d);</code>，按照<code>hit_cnt</code>递减排序。</li>
+<li><code>qsort(a_extras, MIN(USE_AUTO_EXTRAS, a_extras_cnt),sizeof(struct extra_data), compare_extras_len); </code>，按照<code>len</code>递增排序。</li>
+</ul>
+</li>
+</ul>
+<h2 id="perform-dry-run"><a href="#perform-dry-run" class="headerlink" title="perform_dry_run"></a>perform_dry_run</h2><p>执行所有测试用例，检查是否正常工作</p>
+<ul>
+<li>打开<code>q-&gt;fname</code>，并读取内容到<code>use_mem</code></li>
+<li><code>res = calibrate_case(argv, q, use_mem, 0, 1)</code>校准测试用例</li>
+<li>如果<code>res</code>为<code>crash_mode</code>或<code>FAULT_NOBITS</code>，则输出<code>SAYF(cGRA &quot;    len = %u, map size = %u, execspeed = %llu us\n&quot; cRST, q-&gt;len, q-&gt;bitmap_size, q-&gt;exec_us);</code></li>
+<li>根据<code>res</code>判断错误结果：<ul>
+<li><code>FAULT_NONE</code>：<ul>
+<li>如果<code>q</code>是第一个测试用例，则调用<code>check_map_coverage</code>，评估<code>map coverage</code>：<ul>
+<li>如果<code>trace_bits</code>路径数小于100，则直接返回</li>
+<li><code>trace_bits</code>数组中后半段有值，则直接返回</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>FAULT_TMOUT</code>:<ul>
+<li>如果指定了<code>-t</code>参数，则<code>timeout_given</code>参数设置为<code>2</code>，则警告<code>Test case results in a timeout (skipping)</code>，<code>q-&gt;cal_failed</code>设置为<code>CAL_CHANCES</code>，<code>cal_failures</code>计数++。</li>
+</ul>
+</li>
+<li><code>FAULT_CRASH</code>:<ul>
+<li>抛出异常<code>FATAL(&quot;Test case &#39;%s&#39; results in a crash&quot;, fn);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_ERROR</code>:<ul>
+<li>抛出异常<code>FATAL(&quot;Unable to execute target application (&#39;%s&#39;)&quot;, argv[0]);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_NOINST</code>：<ul>
+<li>抛出异常<code>FATAL(&quot;No instrumentation detected&quot;);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_NOBITS</code>:<ul>
+<li>没有出现路径信息，说明这个测试样例是无用的。<code>useless_at_start++</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果<code>q-&gt;var_behavior</code>不为空，则说明该测试用例在相同条件下，多次执行，有不同的路径记录，抛出警告<code>WARNF(&quot;Instrumentation output varies across runs.&quot;);</code></li>
+<li><code>q = q-&gt;next</code>，执行下个测试样例。</li>
+</ul>
+<h2 id="calibrate-case"><a href="#calibrate-case" class="headerlink" title="calibrate_case"></a>calibrate_case</h2><ul>
+<li><p>如果<code>q-&gt;exec_cksum == 0</code>说明这个case是第一次运行，设置<code>first_run</code>为1。</p>
+</li>
+<li><p><code>q-&gt;cal-failed++</code></p>
+</li>
+<li><p>设置<code>stage_name</code>为<code>calibration</code>，并且如果<code>fast_cal</code>不为0，则设置<code>stage_max</code>为3否则为8。<code>stage_max</code>是最大校验次数。</p>
+</li>
+<li><p>当<code>dumb_mode != 1 &amp;&amp; !no_forkserver &amp;&amp; !forksrv_pid</code>，调用<code>init_forserver(argv)</code>。也就是不处于<code>dumb_mode</code>并且<code>no_forkserver</code>为空，还未启动<code>forkserver</code>，就初始化<code>forkserver</code>。</p>
+</li>
+<li><p>如果这个<code>queue_entry</code>不来自<code>input</code>文件夹，而是评估新case，则此时<code>q-&gt;exec_cksum</code>不为0，拷贝<code>trace_bits</code>到<code>first_trace</code>，并计算<code>has_new_bits</code>，如果这个值比<code>new_bits</code>大，则更新<code>new_bits</code>为这个值。</p>
+</li>
+<li><p>执行<code>calibrate stage</code>，共<code>stage_max</code>轮</p>
+<ul>
+<li>如果不是第一次执行，就调用<code>show_status</code>。</li>
+<li>调用<code>run_target(argv, use_tmout)</code>将结果赋值给<code>fault</code>。</li>
+<li>如果<code>stop_soon</code>不为空或者<code>fault != crash_mode</code>，就跳到<code>abort_calibration</code>标签处。</li>
+<li>如果不处于<code>dumb_mode</code>并且处于第一次循环，并且<code>count_bytes(trace_bits)</code>为0，也就是没有路径记录，则设置<code>fault</code>为<code>FAULT_NOINST</code>，跳到<code>abort_calibration</code>标签处。</li>
+<li>根据当前的<code>trace_bits</code>通过<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>函数计算赋值给<code>cksum</code>。</li>
+<li>如果<code>q-&gt;exec_cksum != cksum</code>说明这个case第一次执行或者这次执行和上次执行的路径不同，则调用<code>has_new_bits(virgin_bits)</code>计算，计算的值如果大于<code>new_bits</code>，则更新<code>new_bits</code>。<ul>
+<li>如果<code>q-&gt;exec_cksum</code>不为0，说明不是第一次执行，说明执行触发的路径可变，则遍历整个<code>shm</code>，如果<code>!var_bytes[i] &amp;&amp; first_trace[i] != trace_bits[i]</code>，则说明当前索引的路径可变，设置<code>var_bytes[i]</code>为1，将<code>stage_max</code>更新为40。将<code>var_detected</code>设置为1。</li>
+<li>否则就是第一次执行，将<code>q-&gt;exec_cksum</code>设置为<code>cksum</code>，将<code>trace_bits</code>当前的路径记录拷贝给<code>first_trace</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>将执行<code>calibrate stage</code>的总时间加到<code>total_cal_us</code>。</p>
+</li>
+<li><p>将执行总次数<code>stage_max</code>加到<code>total_cal_cycles</code>。</p>
+</li>
+<li><p><code>q-&gt;exec_us</code>更新为执行一次的平均时间。       </p>
+</li>
+<li><p><code>q-&gt;bitmap_size</code>更新为覆盖的路径数。</p>
+</li>
+<li><p><code>q-&gt;cal_failed</code>设置为0。</p>
+</li>
+<li><p><code>total_bitmap_size</code>加上<code>q-&gt;bitmap_size</code>。</p>
+</li>
+<li><p><code>total_bitmap_entries++</code>。</p>
+</li>
+<li><p><code>update_bitmap_score(q)</code></p>
+</li>
+<li><p>如果<code>!dumb_mode &amp;&amp; first_run &amp;&amp; !fault &amp;&amp; !new_bits</code>，则设置<code>fault</code>为<code>FAULT_NOBITS</code>。</p>
+</li>
+<li><p><code>abort_calibration</code>：</p>
+<ul>
+<li>如果<code>new_bits == 2 &amp;&amp; !q-&gt;has_new_cov</code>，说明当前<code>queue</code>发现了新路径，设置<code>q-&gt;has_new_cov</code>为1，并且<code>queue_with_cov++</code>。</li>
+<li>如果<code>var_detected</code>不为0，<code>var_byte_count</code>赋值为<code>count_bytes(var_bytes)</code>，如果<code>q-&gt;var_behavior</code>为0，调用<code>mark_as_variable(q)</code>，将当前的<code>queue</code>和<code>out_dir/queue/.state/variable_behavior/filename</code>创建符号链接，并且设置<code>q-&gt;var_behavior</code>为1。<code>queued_variable++</code>。</li>
+</ul>
+</li>
+<li><p>返回<code>fault</code>。</p>
+</li>
+</ul>
+<h2 id="init-forkserver"><a href="#init-forkserver" class="headerlink" title="init_forkserver"></a>init_forkserver</h2><ul>
+<li><p>通过<code>pipe</code>函数创建<code>st_pipe</code>状态管道、<code>ctl_pipe</code>控制管道。</p>
+</li>
+<li><p><code>fork</code>进程赋值给<code>forksrv_pid</code></p>
+</li>
+<li><p>当前进程为子进程</p>
+<ul>
+<li><p>重定向标准输出、标准错误到<code>dev_null_ld</code>。如果设置了<code>out_file</code>则重定向标准输入到<code>dev_null_fd</code>，否则重定向到<code>out_fd</code>，并且关闭<code>out_fd</code>。</p>
+</li>
+<li><p>重定向<code>FORKSRV_FD</code>到<code>ctl_pipe[0]</code>，即通过<code>FORKSRV_FD</code>来读取控制管道。</p>
+</li>
+<li><p>重定向<code>FORKSRV_FD + 1</code>到<code>st_pipe[1]</code>，即通过<code>FORKSRV_FD + 1</code>来写入状态管道。</p>
+</li>
+<li><p>关闭不必要的文件描述符。</p>
+<ul>
+<li><pre><code class="c++">close(ctl_pipe[0]);
+close(ctl_pipe[1]);
+close(st_pipe[0]);
+close(st_pipe[1]);
 
-- 如果`LD_BIND_LAZY`环境变量为空，则设置`LD_BIND_NOW`环境变量为1。
-
-- 设置`ASAN_OPTIONS`环境变量为`abort_on_error=1:` `detect_leaks=0:` `symbolize=0:` `allocator_may_return_null=1`，同理设置`MSAN_OPTIONS`。
-
-- 调用`execv(target_path, argv)`，替换进程空间，执行`target_path`。
-
-- 如果调用失败，则将`*(u32 *)tarce_bits`设置为`0xfee1dead`，并退出。
+close(out_dir_fd);
+close(dev_null_fd);
+close(dev_urandom_fd);
+close(fileno(plot_file));
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  - 如果`LD_BIND_LAZY`环境变量为空，则设置`LD_BIND_NOW`环境变量为1。</span><br><span class="line"></span><br><span class="line">  - 设置`ASAN_OPTIONS`环境变量为`abort_on_error=1:` `detect_leaks=0:` `symbolize=0:` `allocator_may_return_null=1`，同理设置`MSAN_OPTIONS`。</span><br><span class="line"></span><br><span class="line">  - 调用`execv(target_path, argv)`，替换进程空间，执行`target_path`。</span><br><span class="line"></span><br><span class="line">  - 如果调用失败，则将`*(u32 *)tarce_bits`设置为`0xfee1dead`，并退出。</span><br><span class="line"></span><br><span class="line">- 当前进程为父进程</span><br><span class="line"></span><br><span class="line">  - 关闭`ctl_pipe[0]` `st_pipe[1]`。</span><br><span class="line">  - 设置`fsrv_ctl_fd`为`ctl_pipe[1]`，设置`fsrv_st_fd`为`st_pipe[0]`。</span><br><span class="line">  - 等待`forkserver`启动，从`fsrv_st_fd`读取4个字节到`status`。</span><br><span class="line">  - 如果读取长度为4个字节，说明启动成功，返回。</span><br><span class="line"></span><br><span class="line">## has_new_bits</span><br><span class="line"></span><br><span class="line">- 将`trace_bits`的首`u64`元素地址赋值给`current`，`virgin_map`的首`u64`地址赋值给`virgin`。</span><br><span class="line">- 将`i`赋值为`MAP_SIZE &gt;&gt; 3`，因为**每8个字节遍历`MAP`**。</span><br><span class="line">- 进入while循环遍历map</span><br><span class="line">  - 如果`*current`不为0且`*current &amp; *virgin`不为0，说明发现覆盖了新路径或者某条路径的执行次数发生了变化</span><br><span class="line">    - 如果`ret`小于2</span><br><span class="line">      - `cur`赋值为`(u8 *)current`，`vir`赋值为`(u8 *)virgin`。</span><br><span class="line">      - 在这8个字节中，如果有一个字节`*cur`不为0且`*vir == 0xff`，即发现覆盖了新路径，设置`ret`为2，否则为1。</span><br><span class="line">    - `*virgin &amp;= ~*current`</span><br><span class="line">- 如果`ret`不为0且`virgin_map == virgin_bits`，那么`bitmap_changed`设置为1。</span><br><span class="line">- 返回`ret`。</span><br><span class="line"></span><br><span class="line">## count_bytes</span><br><span class="line"></span><br><span class="line">- 设置`ptr = (u32 *)mem`。</span><br><span class="line">- `i == (MAP_SIZE &gt;&gt; 2)`，`ret = 0`。</span><br><span class="line">- 进入while循环，每四个字节遍历</span><br><span class="line">  - `v = *(ptr)`</span><br><span class="line">  - 如果`v`为0，即当前4个字节没有路径覆盖，直接`continue`。</span><br><span class="line">  - 否则每个字节如果不为0，都会`ret++`。</span><br><span class="line">- 返回`ret`。</span><br><span class="line"></span><br><span class="line">## run_target</span><br><span class="line"></span><br><span class="line">- 初始化`trace_bits`，全部置为0。</span><br><span class="line"></span><br><span class="line">- 如果`dumb_mode == 1`或者`no_forkserver`不为0</span><br><span class="line"></span><br><span class="line">  - `fork`进程赋值给`child_pid`。</span><br><span class="line"></span><br><span class="line">  - 当前进程为子进程：</span><br><span class="line"></span><br><span class="line">    - 重定向标准输出、标准错误到`dev_null_fd`。</span><br><span class="line"></span><br><span class="line">    - 如果`out_file`不为空，则重定向标准输入到`dev_null_fd`。否则，重定向标准输入到`out_fd`，关闭`out_fd`。</span><br><span class="line"></span><br><span class="line">    - 关闭不需要的`fd`：</span><br><span class="line"></span><br><span class="line">      - ```c++</span><br><span class="line">        close(dev_null_fd);</span><br><span class="line">        close(out_dir_fd);</span><br><span class="line">        close(dev_urandom_fd);</span><br><span class="line">        close(fileno(plot_file));</span><br></pre></td></tr></table></figure>
 </code></pre>
 </li>
-<li><p>当前进程为父进程</p>
-<ul>
-<li>关闭<code>ctl_pipe[0]</code> <code>st_pipe[1]</code>。</li>
-<li>设置<code>fsrv_ctl_fd</code>为<code>ctl_pipe[1]</code>，设置<code>fsrv_st_fd</code>为<code>st_pipe[0]</code>。</li>
-<li>等待<code>forkserver</code>启动，从<code>fsrv_st_fd</code>读取4个字节到<code>status</code>。</li>
-<li>如果读取长度为4个字节，说明启动成功，返回。</li>
-</ul>
+<li><p>设置<code>ASAN_OPTIONS</code>、<code>MSAN_OPTIONS</code>。</p>
 </li>
-</ul>
-<h2 id="has-new-bits"><a href="#has-new-bits" class="headerlink" title="has_new_bits"></a>has_new_bits</h2><ul>
-<li>将<code>trace_bits</code>的首<code>u64</code>元素地址赋值给<code>current</code>，<code>virgin_map</code>的首<code>u64</code>地址赋值给<code>virgin</code>。</li>
-<li>将<code>i</code>赋值为<code>MAP_SIZE &gt;&gt; 3</code>，因为**每8个字节遍历<code>MAP</code>**。</li>
-<li>进入while循环遍历map<ul>
-<li>如果<code>*current</code>不为0且<code>*current &amp; *virgin</code>不为0，说明发现覆盖了新路径或者某条路径的执行次数发生了变化<ul>
-<li>如果<code>ret</code>小于2<ul>
-<li><code>cur</code>赋值为<code>(u8 *)current</code>，<code>vir</code>赋值为<code>(u8 *)virgin</code>。</li>
-<li>在这8个字节中，如果有一个字节<code>*cur</code>不为0且<code>*vir == 0xff</code>，即发现覆盖了新路径，设置<code>ret</code>为2，否则为1。</li>
-</ul>
+<li><p><code>execv</code>替换进程空间，执行<code>target_path</code>。</p>
 </li>
-<li><code>*virgin &amp;= ~*current</code></li>
+<li><p>替换失败，则<code>*trace_bits = 0xfee1dead</code>，<code>exit(0)</code>退出。</p>
+</li>
 </ul>
 </li>
 </ul>
 </li>
-<li>如果<code>ret</code>不为0且<code>virgin_map == virgin_bits</code>，那么<code>bitmap_changed</code>设置为1。</li>
-<li>返回<code>ret</code>。</li>
-</ul>
-<h2 id="count-bytes"><a href="#count-bytes" class="headerlink" title="count_bytes"></a>count_bytes</h2><ul>
-<li>设置<code>ptr = (u32 *)mem</code>。</li>
-<li><code>i == (MAP_SIZE &gt;&gt; 2)</code>，<code>ret = 0</code>。</li>
-<li>进入while循环，每四个字节遍历<ul>
-<li><code>v = *(ptr)</code></li>
-<li>如果<code>v</code>为0，即当前4个字节没有路径覆盖，直接<code>continue</code>。</li>
-<li>否则每个字节如果不为0，都会<code>ret++</code>。</li>
-</ul>
+<li><p>否则就是处于有<code>forkserver</code>的模式，且<code>forkserver</code>已经初始化完毕。</p>
 </li>
-<li>返回<code>ret</code>。</li>
-</ul>
-<h2 id="run-target"><a href="#run-target" class="headerlink" title="run_target"></a>run_target</h2><ul>
-<li><p>初始化<code>trace_bits</code>，全部置为0。</p>
+<li><p>通过<code>fsrv_ctl_fd</code>向控制管道写入<code>prev_timed_out</code>4个字节，表示<code>forkserver</code>可以开始<code>fork</code>子进程进行<code>fuzz</code>。</p>
+</li>
+<li><p>通过<code>fsrv_st_fd</code>向状态管道读入4个字节，赋值到<code>child_pid</code>，表示<code>forkserver</code> <code>fork</code>出来的子进程<code>pid</code>。</p>
 </li>
 <li><p>如果<code>dumb_mode == 1</code>或者<code>no_forkserver</code>不为0</p>
 <ul>
-<li><p><code>fork</code>进程赋值给<code>child_pid</code>。</p>
+<li>则<code>waitpid</code>等待子进程结束，状态变量保存在<code>status</code>。</li>
+</ul>
 </li>
-<li><p>当前进程为子进程：</p>
+<li><p>否则，通过<code>fsrv_st_fd</code>向状态管道读取4个字节，赋值到<code>status</code>，表示子进程执行完最后的状态。</p>
+</li>
+<li><p>计算<code>exec_ms</code>，即<code>target</code>执行时间，并将<code>total_execs++</code>。</p>
+</li>
+<li><p>将<code>trace_bits</code>首4个字节的值赋值给<code>tb4</code>。</p>
+</li>
+<li><p>调用<code>classify_counts((u64 *)trace_bits)</code>。</p>
+</li>
+<li><p><code>child_timed_out</code>赋值给<code>prev_timed_out</code>。</p>
+</li>
+<li><p>如果<code>WIFSIGNALED(status)</code>不为0且<code>!stop_soon</code>，也就是<code>target</code>执行完返回的是异常状态</p>
 <ul>
-<li><p>重定向标准输出、标准错误到<code>dev_null_fd</code>。</p>
+<li>通过<code>WTERMSIG(status)</code>获得异常状态信号值，赋值给<code>kill_signal</code>。</li>
+<li>如果<code>child_timed_out</code>不为0且<code>kill_signal</code>等于<code>SIGKILL</code>，说明<code>target</code>执行超时了，返回<code>FAULT_TMOUT</code>。</li>
+<li>否则返回<code>FAULT_CRASH</code>。</li>
+</ul>
 </li>
-<li><p>如果<code>out_file</code>不为空，则重定向标准输入到<code>dev_null_fd</code>。否则，重定向标准输入到<code>out_fd</code>，关闭<code>out_fd</code>。</p>
+<li><p>如果<code>uses_asan</code>不为0且<code>WEXITSTATUS(status) == MSAN_ERROR</code>，也就是<code>target</code>退出状态是<code>MSAN_ERROR</code>，返回<code>FAULT_CRASH</code>。</p>
 </li>
-<li><p>关闭不需要的<code>fd</code>：</p>
+<li><p>如果(<code>dumb_mode</code>为1或者<code>no_forkserver</code>不为0)且<code>tb4</code>等于<code>0xfee1dead</code>，也就是<code>execv</code>调用失败，返回<code>FAULT_ERROR</code>。</p>
+</li>
+<li><p>如果<code>exec_tmout</code>大于等于<code>timeout</code>且<code>exec_ms</code>大于<code>slowest_exec_ms</code>，将<code>slowest_exec_ms</code>赋值给<code>exec_ms</code>。</p>
+</li>
+<li><p>返回<code>FAULT_NONE</code>。</p>
+</li>
+</ul>
+<h2 id="classify-counts"><a href="#classify-counts" class="headerlink" title="classify_counts"></a>classify_counts</h2><ul>
+<li><p><code>i</code>赋值为<code>MAP_SIZE &gt;&gt; 3</code>，即8个字节遍历。</p>
+</li>
+<li><p>进入while循环遍历</p>
 <ul>
-<li><pre><code class="c++">close(dev_null_fd);
-close(out_dir_fd);
-close(dev_urandom_fd);
-close(fileno(plot_file));
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">    - 设置`ASAN_OPTIONS`、`MSAN_OPTIONS`。</span><br><span class="line"></span><br><span class="line">    - `execv`替换进程空间，执行`target_path`。</span><br><span class="line"></span><br><span class="line">    - 替换失败，则`*trace_bits = 0xfee1dead`，`exit(0)`退出。</span><br><span class="line"></span><br><span class="line">- 否则就是处于有`forkserver`的模式，且`forkserver`已经初始化完毕。</span><br><span class="line"></span><br><span class="line">- 通过`fsrv_ctl_fd`向控制管道写入`prev_timed_out`4个字节，表示`forkserver`可以开始`fork`子进程进行`fuzz`。</span><br><span class="line"></span><br><span class="line">- 通过`fsrv_st_fd`向状态管道读入4个字节，赋值到`child_pid`，表示`forkserver` `fork`出来的子进程`pid`。</span><br><span class="line"></span><br><span class="line">- 如果`dumb_mode == 1`或者`no_forkserver`不为0</span><br><span class="line"></span><br><span class="line">  - 则`waitpid`等待子进程结束，状态变量保存在`status`。</span><br><span class="line"></span><br><span class="line">- 否则，通过`fsrv_st_fd`向状态管道读取4个字节，赋值到`status`，表示子进程执行完最后的状态。</span><br><span class="line"></span><br><span class="line">- 计算`exec_ms`，即`target`执行时间，并将`total_execs++`。</span><br><span class="line"></span><br><span class="line">- 将`trace_bits`首4个字节的值赋值给`tb4`。</span><br><span class="line"></span><br><span class="line">- 调用`classify_counts((u64 *)trace_bits)`。</span><br><span class="line"></span><br><span class="line">- `child_timed_out`赋值给`prev_timed_out`。</span><br><span class="line"></span><br><span class="line">- 如果`WIFSIGNALED(status)`不为0且`!stop_soon`，也就是`target`执行完返回的是异常状态</span><br><span class="line"></span><br><span class="line">  - 通过`WTERMSIG(status)`获得异常状态信号值，赋值给`kill_signal`。</span><br><span class="line">  - 如果`child_timed_out`不为0且`kill_signal`等于`SIGKILL`，说明`target`执行超时了，返回`FAULT_TMOUT`。</span><br><span class="line">  - 否则返回`FAULT_CRASH`。</span><br><span class="line"></span><br><span class="line">- 如果`uses_asan`不为0且`WEXITSTATUS(status) == MSAN_ERROR`，也就是`target`退出状态是`MSAN_ERROR`，返回`FAULT_CRASH`。</span><br><span class="line"></span><br><span class="line">- 如果(`dumb_mode`为1或者`no_forkserver`不为0)且`tb4`等于`0xfee1dead`，也就是`execv`调用失败，返回`FAULT_ERROR`。</span><br><span class="line"></span><br><span class="line">- 如果`exec_tmout`大于等于`timeout`且`exec_ms`大于`slowest_exec_ms`，将`slowest_exec_ms`赋值给`exec_ms`。</span><br><span class="line"></span><br><span class="line">- 返回`FAULT_NONE`。</span><br><span class="line"></span><br><span class="line">## classify_counts</span><br><span class="line"></span><br><span class="line">- `i`赋值为`MAP_SIZE &gt;&gt; 3`，即8个字节遍历。</span><br><span class="line"></span><br><span class="line">- 进入while循环遍历</span><br><span class="line"></span><br><span class="line">  - 如果`*mem`不为0：</span><br><span class="line"></span><br><span class="line">    - `mem16 = (u16 *)mem`，每2个字节赋值。</span><br><span class="line"></span><br><span class="line">    - 每2个字节通过`count_class_lookup16[*mem16]`取到对应的值。</span><br><span class="line"></span><br><span class="line">    - ```c++</span><br><span class="line">      EXP_ST void init_count_class16(void)</span><br><span class="line">      &#123;</span><br><span class="line">      </span><br><span class="line">        u32 b1, b2;</span><br><span class="line">      </span><br><span class="line">        for (b1 = 0; b1 &lt; 256; b1++)</span><br><span class="line">          for (b2 = 0; b2 &lt; 256; b2++)</span><br><span class="line">            count_class_lookup16[(b1 &lt;&lt; 8) + b2] =</span><br><span class="line">                (count_class_lookup8[b1] &lt;&lt; 8) |</span><br><span class="line">                count_class_lookup8[b2];</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
+<li><p>如果<code>*mem</code>不为0：</p>
+<ul>
+<li><p><code>mem16 = (u16 *)mem</code>，每2个字节赋值。</p>
+</li>
+<li><p>每2个字节通过<code>count_class_lookup16[*mem16]</code>取到对应的值。</p>
+</li>
+<li><pre><code class="c++">EXP_ST void init_count_class16(void)
+&#123;
+
+  u32 b1, b2;
+
+  for (b1 = 0; b1 &lt; 256; b1++)
+    for (b2 = 0; b2 &lt; 256; b2++)
+      count_class_lookup16[(b1 &lt;&lt; 8) + b2] =
+          (count_class_lookup8[b1] &lt;&lt; 8) |
+          count_class_lookup8[b2];
+&#125;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- ```c++</span><br><span class="line">  static const u8 count_class_lookup8[256] = &#123;</span><br><span class="line">  </span><br><span class="line">    [0]           = 0,</span><br><span class="line">    [1]           = 1,</span><br><span class="line">    [2]           = 2,</span><br><span class="line">    [3]           = 4,</span><br><span class="line">    [4 ... 7]     = 8,</span><br><span class="line">    [8 ... 15]    = 16,</span><br><span class="line">    [16 ... 31]   = 32,</span><br><span class="line">    [32 ... 127]  = 64,</span><br><span class="line">    [128 ... 255] = 128</span><br><span class="line">  </span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
 </code></pre>
 </li>
+<li><p><code>count_class_lookup16</code>是为加快分类速度，<code>count_class_lookup8</code>是使不同的执行次数更有区分度、稀疏化，也减小了微小执行次数变化的干扰。</p>
+</li>
 </ul>
 </li>
-<li><pre><code class="c++">static const u8 count_class_lookup8[256] = &#123;
+</ul>
+</li>
+</ul>
+<h2 id="update-bitmap-score"><a href="#update-bitmap-score" class="headerlink" title="update_bitmap_score"></a>update_bitmap_score</h2><p>当我们碰到新路径时，我们调用<code>update_bitmap_score</code>来看看这个路径是否比其他已有的更<code>favorable</code>，这个<code>favorable</code>目的在于能够有能触发<code>bitmap</code>所有<code>bit</code>的最小路径集合，专注于<code>fuzz</code>这些路径，而忽略其他的。</p>
+<ul>
+<li><p>用<code>q-&gt;exec_us * q-&gt;len</code>赋值给<code>fav_factor</code>，即将当前<code>queue</code>的执行时间和<code>queue</code>的长度的乘积作为fav因子，赋值给<code>fav_factor</code>。</p>
+</li>
+<li><p>按字节for循环遍历<code>map</code></p>
+<ul>
+<li>如果当前字节<code>trace_bits</code>不为0<ul>
+<li>如果当前字节<code>top_rated</code>不为0<ul>
+<li>如果<code>fav_factor</code>大于当前字节<code>top_rated</code>的fav因子，则直接<code>continue</code></li>
+<li><code>--top_rated[i]-&gt;tc_ref</code>，减少当前字节<code>top_rated</code>的引用计数，如果减到0时，则释放掉<code>top_rated[i]-&gt;trace_mini</code>，将<code>top_rated[i]-&gt;trace_mini</code>置为0，即丢弃它记录的<code>trace_mini</code>。</li>
+</ul>
+</li>
+<li>将<code>top_rated[i]</code>赋值为当前<code>queue</code>，<code>q-&gt;tc_ref++</code>。</li>
+<li>如果<code>q-&gt;trace_mini</code>为空<ul>
+<li>则申请<code>MAP &gt;&gt; 3</code>的空间，将地址赋值给<code>q-&gt;trace_mini</code>，调用<code>minimize_bits(q-&gt;trace_mini, trace_bits)</code>。</li>
+</ul>
+</li>
+<li><code>score_changed</code>置为1。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="minimize-bits"><a href="#minimize-bits" class="headerlink" title="minimize_bits"></a>minimize_bits</h2><p>将<code>trace_bits</code>压缩到更小的<code>bitmap</code>，这个<code>bitmap</code>的大小是<code>MAPSIZE &gt;&gt; 3</code>，这两个<code>bitmap</code>都是按照字节操作的，所以要把原来8个字节压缩到1个字节，且抛弃掉计数信息。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">minimize_bits</span><span class="params">(u8 *dst, u8 *src)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">  u32 i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (i &lt; MAP_SIZE)</span><br><span class="line">  &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (*(src++))</span><br><span class="line">      dst[i &gt;&gt; <span class="number">3</span>] |= <span class="number">1</span> &lt;&lt; (i &amp; <span class="number">7</span>);</span><br><span class="line">    i++;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-  [0]           = 0,
-  [1]           = 1,
-  [2]           = 2,
-  [3]           = 4,
-  [4 ... 7]     = 8,
-  [8 ... 15]    = 16,
-  [16 ... 31]   = 32,
-  [32 ... 127]  = 64,
-  [128 ... 255] = 128
-
-&#125;;
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">    - `count_class_lookup16`是为加快分类速度，`count_class_lookup8`是使不同的执行次数更有区分度、稀疏化，也减小了微小执行次数变化的干扰。</span><br><span class="line"></span><br><span class="line">## update_bitmap_score</span><br><span class="line"></span><br><span class="line">当我们碰到新路径时，我们调用`update_bitmap_score`来看看这个路径是否比其他已有的更`favorable`，这个`favorable`目的在于能够有能触发`bitmap`所有`bit`的最小路径集合，专注于`fuzz`这些路径，而忽略其他的。</span><br><span class="line"></span><br><span class="line">- 用`q-&gt;exec_us * q-&gt;len`赋值给`fav_factor`，即将当前`queue`的执行时间和`queue`的长度的乘积作为fav因子，赋值给`fav_factor`。</span><br><span class="line"></span><br><span class="line">- 按字节for循环遍历`map`</span><br><span class="line">  - 如果当前字节`trace_bits`不为0</span><br><span class="line">    - 如果当前字节`top_rated`不为0</span><br><span class="line">      - 如果`fav_factor`大于当前字节`top_rated`的fav因子，则直接`continue`</span><br><span class="line">      - `--top_rated[i]-&gt;tc_ref`，减少当前字节`top_rated`的引用计数，如果减到0时，则释放掉`top_rated[i]-&gt;trace_mini`，将`top_rated[i]-&gt;trace_mini`置为0，即丢弃它记录的`trace_mini`。</span><br><span class="line">    - 将`top_rated[i]`赋值为当前`queue`，`q-&gt;tc_ref++`。</span><br><span class="line">    - 如果`q-&gt;trace_mini`为空</span><br><span class="line">      - 则申请`MAP &gt;&gt; 3`的空间，将地址赋值给`q-&gt;trace_mini`，调用`minimize_bits(q-&gt;trace_mini, trace_bits)`。</span><br><span class="line">    - `score_changed`置为1。</span><br><span class="line"></span><br><span class="line">## minimize_bits</span><br><span class="line"></span><br><span class="line">将`trace_bits`压缩到更小的`bitmap`，这个`bitmap`的大小是`MAPSIZE &gt;&gt; 3`，这两个`bitmap`都是按照字节操作的，所以要把原来8个字节压缩到1个字节，且抛弃掉计数信息。</span><br><span class="line"></span><br><span class="line">```c++</span><br><span class="line">static void minimize_bits(u8 *dst, u8 *src)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">  u32 i = 0;</span><br><span class="line"></span><br><span class="line">  while (i &lt; MAP_SIZE)</span><br><span class="line">  &#123;</span><br><span class="line"></span><br><span class="line">    if (*(src++))</span><br><span class="line">      dst[i &gt;&gt; 3] |= 1 &lt;&lt; (i &amp; 7);</span><br><span class="line">    i++;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
 <p>原来<code>map</code>字节保存的索引通过<code>&gt;&gt; 3</code>实现，因为8个字节要映射到1个字节，原来的 路径存在信息 保存在字节里，现在保存在对应的<code>bit</code>上，通过<code>|= 1 &lt;&lt; (i &amp; 7)</code>实现</p>
 <h2 id="cull-queue"><a href="#cull-queue" class="headerlink" title="cull_queue"></a>cull_queue</h2><ul>
 <li>如果<code>dumb_mode</code>不为0或者<code>score_changed</code>等于0，则直接返回。</li>
@@ -948,7 +1096,7 @@ close(fileno(plot_file));
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-fuzz"><span class="nav-number">3.</span> <span class="nav-text">afl-fuzz</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#setup-shm"><span class="nav-number">3.1.</span> <span class="nav-text">setup_shm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#maybe-add-auto"><span class="nav-number">3.2.</span> <span class="nav-text">maybe_add_auto</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#has-new-bits"><span class="nav-number">3.3.</span> <span class="nav-text">has_new_bits</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#count-bytes"><span class="nav-number">3.4.</span> <span class="nav-text">count_bytes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#run-target"><span class="nav-number">3.5.</span> <span class="nav-text">run_target</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cull-queue"><span class="nav-number">3.6.</span> <span class="nav-text">cull_queue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mark-as-redundant"><span class="nav-number">3.7.</span> <span class="nav-text">mark_as_redundant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fuzz%E6%89%A7%E8%A1%8C"><span class="nav-number">3.8.</span> <span class="nav-text">fuzz执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%BE%AA%E7%8E%AF"><span class="nav-number">3.8.1.</span> <span class="nav-text">主循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fuzz-one"><span class="nav-number">3.8.2.</span> <span class="nav-text">fuzz_one</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CALIBRATION"><span class="nav-number">3.8.2.1.</span> <span class="nav-text">CALIBRATION</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TRIMMING"><span class="nav-number">3.8.2.2.</span> <span class="nav-text">TRIMMING</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PERFORMANCE-SCORE"><span class="nav-number">3.8.2.3.</span> <span class="nav-text">PERFORMANCE SCORE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SIMPLE-BITFLIP-dictionary-construction"><span class="nav-number">3.8.2.4.</span> <span class="nav-text">SIMPLE BITFLIP (+dictionary construction)</span></a></li></ol></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-fuzz"><span class="nav-number">3.</span> <span class="nav-text">afl-fuzz</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#setup-shm"><span class="nav-number">3.1.</span> <span class="nav-text">setup_shm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#maybe-add-auto"><span class="nav-number">3.2.</span> <span class="nav-text">maybe_add_auto</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#perform-dry-run"><span class="nav-number">3.3.</span> <span class="nav-text">perform_dry_run</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calibrate-case"><span class="nav-number">3.4.</span> <span class="nav-text">calibrate_case</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init-forkserver"><span class="nav-number">3.5.</span> <span class="nav-text">init_forkserver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#classify-counts"><span class="nav-number">3.6.</span> <span class="nav-text">classify_counts</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#update-bitmap-score"><span class="nav-number">3.7.</span> <span class="nav-text">update_bitmap_score</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#minimize-bits"><span class="nav-number">3.8.</span> <span class="nav-text">minimize_bits</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cull-queue"><span class="nav-number">3.9.</span> <span class="nav-text">cull_queue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mark-as-redundant"><span class="nav-number">3.10.</span> <span class="nav-text">mark_as_redundant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fuzz%E6%89%A7%E8%A1%8C"><span class="nav-number">3.11.</span> <span class="nav-text">fuzz执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%BE%AA%E7%8E%AF"><span class="nav-number">3.11.1.</span> <span class="nav-text">主循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fuzz-one"><span class="nav-number">3.11.2.</span> <span class="nav-text">fuzz_one</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CALIBRATION"><span class="nav-number">3.11.2.1.</span> <span class="nav-text">CALIBRATION</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TRIMMING"><span class="nav-number">3.11.2.2.</span> <span class="nav-text">TRIMMING</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PERFORMANCE-SCORE"><span class="nav-number">3.11.2.3.</span> <span class="nav-text">PERFORMANCE SCORE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SIMPLE-BITFLIP-dictionary-construction"><span class="nav-number">3.11.2.4.</span> <span class="nav-text">SIMPLE BITFLIP (+dictionary construction)</span></a></li></ol></li></ol></li></ol></li></ol></div>
             
 
           </div>
@@ -989,7 +1137,7 @@ close(fileno(plot_file));
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">20.4k</span>
+    <span title="Site words total count">20.3k</span>
   
 </div>
 
