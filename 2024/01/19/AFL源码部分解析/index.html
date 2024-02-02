@@ -87,7 +87,7 @@
 <meta property="og:description" content="fuzzy">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-01-19T08:58:17.000Z">
-<meta property="article:modified_time" content="2024-01-31T08:19:03.306Z">
+<meta property="article:modified_time" content="2024-02-02T06:58:27.531Z">
 <meta property="article:author" content="enllus1on">
 <meta name="twitter:card" content="summary">
 
@@ -297,8 +297,8 @@
               
                 <span class="post-meta-item-text">Post modified&#58;</span>
               
-              <time title="Post modified" itemprop="dateModified" datetime="2024-01-31T16:19:03+08:00">
-                2024-01-31
+              <time title="Post modified" itemprop="dateModified" datetime="2024-02-02T14:58:27+08:00">
+                2024-02-02
               </time>
             
           </span>
@@ -347,7 +347,7 @@
                   <span class="post-meta-item-text">Words count in article&#58;</span>
                 
                 <span title="Words count in article">
-                  5.1k
+                  7k
                 </span>
               
 
@@ -363,7 +363,7 @@
                   <span class="post-meta-item-text">Reading time &asymp;</span>
                 
                 <span title="Reading time">
-                  21
+                  30
                 </span>
               
             </div>
@@ -457,7 +457,7 @@
 <h1 id="afl-fuzz"><a href="#afl-fuzz" class="headerlink" title="afl-fuzz"></a>afl-fuzz</h1><h2 id="setup-shm"><a href="#setup-shm" class="headerlink" title="setup_shm"></a>setup_shm</h2><ul>
 <li>如果<code>in_bitmap</code>为空，则将<code>virgin_bits</code>初始化每<code>bit</code>都为1。</li>
 <li>初始化<code>virgin_tmout、virgin_crash</code>每<code>bit</code>为1。</li>
-<li>通过<code>shmget</code>开辟一块读写共享内存，返回改内存块对应的共享标识符到<code>shm_id</code>。注册<code>atexit handler</code>为<code>remove_shm</code>，用来当程序结束时，删除共享内存块。</li>
+<li>通过<code>shmget</code>开辟一块读写共享内存，返回该内存块对应的共享标识符到<code>shm_id</code>。注册<code>atexit handler</code>为<code>remove_shm</code>，用来当程序结束时，删除共享内存块。</li>
 <li>如果<code>dumb_mode</code>为空，则设置<code>SHM_ENV_VAR</code>为<code>shm_id</code>。</li>
 <li>通过<code>shmat</code>获取对该共享内存的访问，并将共享内存地址赋值给<code>trace_bits</code></li>
 </ul>
@@ -694,7 +694,8 @@ close(fileno(plot_file));
 </ul>
 </li>
 </ul>
-<h2 id="update-bitmap-score"><a href="#update-bitmap-score" class="headerlink" title="update_bitmap_score"></a>update_bitmap_score</h2><p>当我们碰到新路径时，我们调用<code>update_bitmap_score</code>来看看这个路径是否比其他已有的更<code>favorable</code>，这个<code>favorable</code>目的在于能够有能触发<code>bitmap</code>所有<code>bit</code>的最小路径集合，专注于<code>fuzz</code>这些路径，而忽略其他的。</p>
+<h2 id="update-bitmap-score"><a href="#update-bitmap-score" class="headerlink" title="update_bitmap_score"></a>update_bitmap_score</h2><p>update top_rated[]</p>
+<p>当我们碰到新路径时，我们调用<code>update_bitmap_score</code>来看看这个路径是否比其他已有的更<code>favorable</code>，这个<code>favorable</code>目的在于能够有能触发<code>bitmap</code>所有<code>bit</code>的最小路径集合，专注于<code>fuzz</code>这些路径，而忽略其他的。</p>
 <ul>
 <li><p>用<code>q-&gt;exec_us * q-&gt;len</code>赋值给<code>fav_factor</code>，即将当前<code>queue</code>的执行时间和<code>queue</code>的长度的乘积作为fav因子，赋值给<code>fav_factor</code>。</p>
 </li>
@@ -721,7 +722,8 @@ close(fileno(plot_file));
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">minimize_bits</span><span class="params">(u8 *dst, u8 *src)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">  u32 i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (i &lt; MAP_SIZE)</span><br><span class="line">  &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (*(src++))</span><br><span class="line">      dst[i &gt;&gt; <span class="number">3</span>] |= <span class="number">1</span> &lt;&lt; (i &amp; <span class="number">7</span>);</span><br><span class="line">    i++;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>原来<code>map</code>字节保存的索引通过<code>&gt;&gt; 3</code>实现，因为8个字节要映射到1个字节，原来的 路径存在信息 保存在字节里，现在保存在对应的<code>bit</code>上，通过<code>|= 1 &lt;&lt; (i &amp; 7)</code>实现</p>
-<h2 id="cull-queue"><a href="#cull-queue" class="headerlink" title="cull_queue"></a>cull_queue</h2><ul>
+<h2 id="cull-queue"><a href="#cull-queue" class="headerlink" title="cull_queue"></a>cull_queue</h2><p>从<code>top_rated[]</code>选出<code>favored</code>。</p>
+<ul>
 <li>如果<code>dumb_mode</code>不为0或者<code>score_changed</code>等于0，则直接返回。</li>
 <li><code>score_changed</code>赋值为0。</li>
 <li>初始化<code>temp_v</code>每<code>bit</code>上都为1，<code>temp_v</code>为压缩<code>bitmap</code>。</li>
@@ -855,7 +857,228 @@ close(fileno(plot_file));
 <li><code>new_hit_cnt</code>赋值为<code>queued_paths + unique_crashes</code>。</li>
 <li><code>stage_finds[STAGE_FLIP1]</code>加上<code>new_hit_cnt - orig_hit_cnt</code>，即新发现的路径或者crash。</li>
 <li><code>stage_cycles[STAGE_FLIP1]</code>加上<code>stage_max</code>。</li>
-<li></li>
+<li>设置<code>stage_name</code>为<code>bitflip 2/1</code>，和上述过程同理，但是现在一次循环翻转2个<code>bit</code>，步长为1个<code>bit</code>。</li>
+<li>同理<code>bitflip 4/1</code>。</li>
+<li>生成 effector map</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_APOS(_p) ((_p) &gt;&gt; EFF_MAP_SCALE2)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_REM(_x) ((_x) &amp; ((1 &lt;&lt; EFF_MAP_SCALE2) - 1))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_ALEN(_l) (EFF_APOS(_l) + !!EFF_REM(_l))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_SPAN_ALEN(_p, _l) (EFF_APOS((_p) + (_l)-1) - EFF_APOS(_p) + 1)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>申请<code>EFF_ALEN(len)</code>大小的内存，将地址赋值给<code>eff_map</code>，<code>eff_map</code>也是压缩存储的<code>bitmap</code>，总是标记第一字节和最后一字节的值为1。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">eff_map[<span class="number">0</span>] = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">EFF_APOS</span>(len - <span class="number">1</span>) != <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">  eff_map[<span class="built_in">EFF_APOS</span>(len - <span class="number">1</span>)] = <span class="number">1</span>;</span><br><span class="line">  eff_cnt++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>bitflip 8/8</code>阶段，通过每个字节异或<code>0xFF</code>进行翻转，调用<code>common_fuzz_stuff(argv, out_buf, len)</code>。</p>
+<ul>
+<li>如果<code>eff_map[EFF_APOS(stage_cur)]</code>为0<ul>
+<li>如果不处于<code>dumb_mode</code>或者<code>len</code>大于等于<code>EFF_MIN_LEN</code><ul>
+<li><code>cksum</code>通过<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>计算，否则，直接按照<code>~queue_cur-&gt;exec_cksum</code>计算。</li>
+<li>如果<code>cksum</code>不等于<code>queue_cur-&gt;exec_cksum</code>，则将<code>eff_map[EFF_APOS(stage_cur)]</code>置为1，并<code>eff_cnt++</code>，即当case的长度够长时，才会通过翻转字节后会不会改变覆盖的路径，来判断需不需标记这个字节是<code>meatdata</code>，将这个字节对应的位置的<code>eff_map</code>标记为1。也就是这个字节是关键字时，翻转它才会改变路径，否则它是<code>plain data</code>的话，翻转它不会造成路径变化。在后续的<code>bitflip</code>中，会跳过<code>eff_map</code>对应位置为0的字节。但是当case的长度太短了，则会直接标记为1。</li>
+<li>再异或<code>0xFF</code>翻转回来。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>如果<code>eff_cnt</code>不等于<code>EFF_ALEN(len)</code>并且<code>eff_cnt * 100 / EFF_ALEN(len)</code>大于<code>EFF_MAX_PERC</code></p>
+<ul>
+<li>则直接把<code>eff_map</code>所有字节标记为1，即认为所有字节都是有必要进行之后的<code>fuzz</code>。<code>block_eff_select</code>加上<code>EFF_ALEN(len)</code>。</li>
+</ul>
+</li>
+<li><p>否则<code>block_eff_select</code>加上<code>eff_cnt</code>。</p>
+</li>
+<li><p><code>block_eff_total</code>加上<code>EFF_ALEN(len)</code>。</p>
+</li>
+<li><p><code>bitflip 16/8</code>同理，但是<code>eff_map[EFF_APOS(i)]</code>和<code>eff_map[EFF_APOS(i + 1)]</code>都为0，就会<code>stage_max--</code>并跳过此次字节翻转。</p>
+</li>
+<li><p><code>bitfilp 32/8</code>同理，但是是四个字节对应的<code>eff_map</code>值都为0，跳过此次字节翻转。</p>
+</li>
+</ul>
+<h4 id="ARITHMETIC-INC-x2F-DEC"><a href="#ARITHMETIC-INC-x2F-DEC" class="headerlink" title="ARITHMETIC INC&#x2F;DEC"></a>ARITHMETIC INC&#x2F;DEC</h4><ul>
+<li><code>arith 8/8</code>、<code>arith 16/8</code>、<code>arith 32/8</code>总过这三个小阶段，和<code>bitflip</code>原理类似，只不过变成加上或减去值，由于<code>ARITH_MAX</code>的值是35，所以变化的范围是<code>[-35, 35]</code>，同时也会考虑大小端序。</li>
+<li>通过<code>eff_map</code>和加上或减去某些值判断是不是和<code>bitflip</code>一样，来跳过某些<code>mutate</code>。</li>
+</ul>
+<h4 id="INTERESTING-VALUES"><a href="#INTERESTING-VALUES" class="headerlink" title="INTERESTING VALUES"></a>INTERESTING VALUES</h4><ul>
+<li><code>interest 8/8</code>、<code>interest 16/8</code>、<code>interest 32/8</code>，对对应长度的值替换成<code>interesting value</code>。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> INTERESTING_8 \</span></span><br><span class="line"><span class="meta">  -128,          <span class="comment">/* Overflow signed 8-bit when decremented  */</span> \</span></span><br><span class="line"><span class="meta">  -1,            <span class="comment">/*                                         */</span> \</span></span><br><span class="line"><span class="meta">   0,            <span class="comment">/*                                         */</span> \</span></span><br><span class="line"><span class="meta">   1,            <span class="comment">/*                                         */</span> \</span></span><br><span class="line"><span class="meta">   16,           <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   32,           <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   64,           <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   100,          <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   127           <span class="comment">/* Overflow signed 8-bit when incremented  */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INTERESTING_16 \</span></span><br><span class="line"><span class="meta">  -32768,        <span class="comment">/* Overflow signed 16-bit when decremented */</span> \</span></span><br><span class="line"><span class="meta">  -129,          <span class="comment">/* Overflow signed 8-bit                   */</span> \</span></span><br><span class="line"><span class="meta">   128,          <span class="comment">/* Overflow signed 8-bit                   */</span> \</span></span><br><span class="line"><span class="meta">   255,          <span class="comment">/* Overflow unsig 8-bit when incremented   */</span> \</span></span><br><span class="line"><span class="meta">   256,          <span class="comment">/* Overflow unsig 8-bit                    */</span> \</span></span><br><span class="line"><span class="meta">   512,          <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   1000,         <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   1024,         <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   4096,         <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   32767         <span class="comment">/* Overflow signed 16-bit when incremented */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INTERESTING_32 \</span></span><br><span class="line"><span class="meta">  -2147483648LL, <span class="comment">/* Overflow signed 32-bit when decremented */</span> \</span></span><br><span class="line"><span class="meta">  -100663046,    <span class="comment">/* Large negative number (endian-agnostic) */</span> \</span></span><br><span class="line"><span class="meta">  -32769,        <span class="comment">/* Overflow signed 16-bit                  */</span> \</span></span><br><span class="line"><span class="meta">   32768,        <span class="comment">/* Overflow signed 16-bit                  */</span> \</span></span><br><span class="line"><span class="meta">   65535,        <span class="comment">/* Overflow unsig 16-bit when incremented  */</span> \</span></span><br><span class="line"><span class="meta">   65536,        <span class="comment">/* Overflow unsig 16 bit                   */</span> \</span></span><br><span class="line"><span class="meta">   100663045,    <span class="comment">/* Large positive number (endian-agnostic) */</span> \</span></span><br><span class="line"><span class="meta">   2147483647    <span class="comment">/* Overflow signed 32-bit when incremented */</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="DICTIONARY-STUFF"><a href="#DICTIONARY-STUFF" class="headerlink" title="DICTIONARY STUFF"></a>DICTIONARY STUFF</h4><ul>
+<li><p><code>user extras (over)</code>：在对应的偏移处覆盖成<code>extras</code>。</p>
+<ul>
+<li>如果<code>extras_cnt &gt; MAX_DET_EXTRAS</code>并且<code>UR(extras_cnt) &gt;= MAX_DET_EXTRAS</code>并且剩下的长度小于<code>extras[j].len</code>或者原来的值和要插入的<code>extras</code>一样或者<code>eff_map</code>对应位置值为0，跳过此次<code>mutate</code>。</li>
+</ul>
+</li>
+<li><p><code>user extras (insert)</code>：在对应偏移处插入<code>extras</code>。</p>
+</li>
+<li><p><code>auto extras (over)</code>：和第一小阶段类似，但是使用的是自动生成的<code>extras</code>。</p>
+</li>
+<li><p>此时完成了所有的<code>deterministic mutate</code>，如果<code>queue_cur-&gt;passed_det</code>为空，则调用<code>mark_as_det_done(queue_cur)</code>标记。</p>
+</li>
+</ul>
+<h4 id="RANDOM-HAVOC"><a href="#RANDOM-HAVOC" class="headerlink" title="RANDOM HAVOC"></a>RANDOM HAVOC</h4><ul>
+<li>总的来说，就是在随机次数下采取随机种<code>mutate</code>组合，并且<code>mutate</code>的执行也会是随机的。如果在这个阶段发现了新路径，执行次数也会增加。</li>
+</ul>
+<h4 id="SPLICING"><a href="#SPLICING" class="headerlink" title="SPLICING"></a>SPLICING</h4><ul>
+<li>只有在遍历整个<code>queue</code>都没有新发现的情况下才会启用<code>splicing</code>。</li>
+<li>随机选取一个<code>queue_entry</code>，寻找合适的位置和当前case拼接，然后跳转到<code>havoc stage</code>。</li>
+</ul>
+<hr>
+<h3 id="trim-case"><a href="#trim-case" class="headerlink" title="trim_case"></a>trim_case</h3><ul>
+<li>如果<code>q-&gt;len</code>小于5，则直接返回 0。</li>
+<li><code>bytes_trim_in</code>加上<code>q-&gt;len</code>。</li>
+<li><code>len_p2</code>赋值为<code>next_p2(q-&gt;len)</code>，也就是赋值为第一个大于等于<code>len</code>的2的幂数。</li>
+<li><code>remove_len</code>赋值为<code>MAX(len_p2 / TRIM_START_STEPS, TRIM_MIN_BYTES)</code>。</li>
+<li><code>while(remove_len &gt;= MAX(len_p2 / TRIM_END_STEPS, TRIM_MIN_BYTES))</code><ul>
+<li><code>remove_pos</code>赋值为<code>remove_len</code>。</li>
+<li><code>stage_cur</code>置为0，<code>stage_max</code>赋值为<code>q-&gt;len / remove_len</code>。</li>
+<li><code>while(remove_pos &lt; q-&gt;len)</code><ul>
+<li><code>trim_avail</code>赋值为<code>MIN(remove_len, q-&gt;len - remove_pos)</code>。</li>
+<li>调用<code>write_with_gap(in_buf, q-&gt;len, remove_pos, trim_avail)</code>将<code>out_file</code>从<code>remove_pos</code>处剪掉<code>trim_avail</code>的长度。</li>
+<li>调用<code>run_target(argv, exec_tmout)</code>，将结果赋值给<code>fault</code>。</li>
+<li><code>trim_execs++</code>。</li>
+<li>如果<code>stop_soon</code>不为0或者<code>fault</code>等于<code>FAULT_ERROR</code>。跳转到<code>abort_trimming</code>。</li>
+<li><code>cksum</code>赋值为<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>。</li>
+<li>如果<code>cksum</code>等于<code>q-&gt;exec_cksum</code>，即剪掉这部分对case没有影响<ul>
+<li><code>move_tail</code>赋值为<code>q-&gt;len - remove_pos - trim_avail</code>。</li>
+<li><code>q-&gt;len</code>减掉<code>trim_avail</code>。</li>
+<li><code>len_p2</code>赋值为<code>next_p2(q-&gt;len)</code>。</li>
+<li><code>memmove(in_buf + remove_pos, in_buf + remove_pos + trim_avail, move_tail);</code>，实现<code>trim</code></li>
+<li>如果<code>needs_write</code>为0<ul>
+<li><code>needs_write</code>置为1。</li>
+<li>将<code>trace_bits</code>拷贝到<code>clean_trace</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>否则，<code>remove_pos</code>加上<code>remove_len</code>。</li>
+<li><code>show_status()</code>，并且<code>stage_cur++</code>。</li>
+</ul>
+</li>
+<li><code>remove</code>右移一位。</li>
+</ul>
+</li>
+<li>如果<code>needs_write</code>不为0<ul>
+<li><code>unlink(q-&gt;fname)</code>，打开新的<code>q-&gt;fname</code>，将文件描述符赋值给<code>fd</code>。</li>
+<li>将<code>trimmed in_buf</code>写进<code>q-&gt;fname</code>。</li>
+<li>将<code>clean_trace</code>拷贝给<code>trace_bits</code>。</li>
+<li>调用<code>update_bitmap_score(q)</code>。</li>
+</ul>
+</li>
+<li><code>abort_trimming标签</code></li>
+<li><code>bytes_trim_out</code>加上<code>q-&gt;len</code>。</li>
+<li>返回<code>fault</code>。</li>
+</ul>
+<h3 id="sync-fuzzers"><a href="#sync-fuzzers" class="headerlink" title="sync_fuzzers"></a>sync_fuzzers</h3><p>读取其他fuzzer的<code>queue</code>，保存到自己的<code>queue</code></p>
+<ul>
+<li>通过<code>opendir(sync_dir)</code>打开<code>sync_dir</code>，将返回值给<code>sd</code>。</li>
+<li>while循环读取该目录下的文件<code>(sd_ent = readdir(sd))</code><ul>
+<li>跳过<code>.</code>开头的文件和自己的输出文件夹。</li>
+<li>通过<code>opendir(&quot;sync_dir/sd_ent-&gt;d_name/queue&quot;)</code>打开<code>queue</code>目录，将返回值给<code>qd</code>，跳过没有<code>queue</code>子目录的目录。</li>
+<li>打开<code>out_dir/.synced/sd_ent-&gt;d_name</code>将返回值给<code>id_fd</code>。</li>
+<li>从<code>id_fd</code>读取四个字节赋值给<code>min_accept</code>。<code>minaccept</code>赋值给<code>next_min_accept</code>。<code>min_accept</code>是上次最后一个读取的case的下一个case的<code>id</code>。</li>
+<li>while循环读取<code>queue</code>下的case<code>(qd_ent = readdir(qd))</code><ul>
+<li>跳过<code>.</code>目录和<code>id</code>比<code>min_accept</code>小的case，将读取的<code>id</code>赋值给<code>syncing_case</code>。</li>
+<li>如果<code>syncing_case</code>大于等于<code>next_min_accept</code>，则<code>next_min_accept</code>等于<code>syncing_case + 1</code>。</li>
+<li>打开<code>dq_path/qd_ent-&gt;d_name</code>，即打开这个case，将返回值给<code>fd</code>。</li>
+<li>通过<code>fd</code>将内容映射到<code>mem</code>。</li>
+<li>通过<code>write_to_testcase(mem, st.st_size)</code>，将case的内容写入到<code>out_file</code>。</li>
+<li><code>run_target(argv, exec_tmout)</code>将返回值赋给<code>fault</code>。</li>
+<li><code>queued_imported</code>加上<code>save_if_interesting(argv, mem, st.st_size, fault)</code>。</li>
+</ul>
+</li>
+<li>通过<code>id_fd</code>写入<code>next_min_accept</code>。</li>
+</ul>
+</li>
+</ul>
+<h3 id="save-if-interesting"><a href="#save-if-interesting" class="headerlink" title="save_if_interesting"></a>save_if_interesting</h3><ul>
+<li>如果<code>fault</code>等于<code>crash_mode</code><ul>
+<li>调用<code>has_new_bits(virgin_bits)</code>返回值给<code>hnb</code>，如果为0<ul>
+<li>如果<code>crash_mode</code>不为0<ul>
+<li><code>total_crashes++</code>。</li>
+<li>返回0。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>fn</code>赋值为<code>alloc_printf(&quot;%s/queue/id:%06u,%s&quot;, out_dir, queued_paths,describe_op(hnb));</code></li>
+<li><code>add_to_queue(fn, len, 0);</code>添加到<code>queue</code>。</li>
+<li>如果<code>hnb</code>等于2，即覆盖了新路径<ul>
+<li><code>queue_top-&gt;has_new_cov</code>赋值为1。</li>
+<li><code>queued_with_cov++</code>。</li>
+</ul>
+</li>
+<li><code>queue_top-&gt;exec_cksum</code>赋值为<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>。</li>
+<li>调用<code>calibrate_case(argv, queue_top, mem, queue_cycle - 1, 0)</code>，将结果给<code>res</code>。</li>
+<li>如果<code>res</code>等于<code>FAULT_ERROR</code>抛出异常退出。</li>
+<li>打开case<code>open(fn)</code>，将结果赋值给<code>fd</code>。</li>
+<li>通过<code>fd</code>写入<code>mem</code>，<code>ck_write(fd, mem, len, fn);</code>。</li>
+<li><code>keeping</code>赋值为1。</li>
+</ul>
+</li>
+<li><code>Switch(fault)</code><ul>
+<li><code>FAULT_TMOUT</code>:<ul>
+<li><code>total_tmouts++</code></li>
+<li>如果<code>unique_hangs</code>大于等于<code>KEEP_UNIQUE_HANG</code>，返回<code>keeping</code>。</li>
+<li>如果不处于<code>dumb_mode</code><ul>
+<li>调用<code>simplify_trace((u64 *)trace_bits)</code></li>
+<li>如果<code>has_new_bits(virgin_tmout)</code>为0，返回<code>keeping</code>。</li>
+</ul>
+</li>
+<li><code>unique_tmouts++</code>。</li>
+<li>如果<code>exec_tmout</code>小于<code>hang_tmout</code><ul>
+<li><code>write_to_testcase</code>写入到<code>out_file</code>。</li>
+<li>再次调用<code>run_target(argv, hang_tmout)</code>，将结果赋值给<code>new_fault</code>。</li>
+<li>如果<code>stop_soon</code>为0且<code>new_fault</code>等于<code>FAULT_CRASH</code>，跳转到<code>keep_as_crash</code>。</li>
+<li>如果<code>stop_soon</code>不为0或者<code>new_fault</code>不等于<code>FAULT_TMOUT</code>，返回<code>keeping</code>。</li>
+<li><code>fn</code>赋值为<code>alloc_printf(&quot;%s/hangs/id:%06llu,%s&quot;, out_dir,unique_hangs, describe_op(0));</code></li>
+<li><code>unique_hangs++</code>。</li>
+<li><code>last_hang_time</code>等于<code>get_cur_time</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>FAULT_CRASH(keep_as_crash标签)</code>：<ul>
+<li><code>total_crashes++</code></li>
+<li>如果<code>unique_crashes</code>大于等于<code>KEEP_UNIQUE_CRASH</code>，则直接返回<code>keeping</code>。</li>
+<li>如果不处于<code>dumb_mode</code><ul>
+<li><code>simplify_trace((u64 *)trace_bits)</code></li>
+<li>如果<code>has_new_bits(virgin_crash)</code>为0，则直接返回<code>keeping</code>。</li>
+<li><code>fn</code>赋值为<code>fn = alloc_printf(&quot;%s/crashes/id:%06llu,sig:%02u,%s&quot;, out_dir,unique_crashes, kill_signal, describe_op(0));</code></li>
+<li><code>unique_crashes++</code>。</li>
+<li><code>last_crash_time</code>赋值为<code>get_cur_time()</code>。</li>
+<li><code>last_crash_execs</code>赋值为<code>total_execs</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>FAULT_ERROR</code>:<ul>
+<li>抛出异常退出。</li>
+</ul>
+</li>
+<li><code>default</code>:<ul>
+<li>返回<code>keeping</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>open(fn)</code>，将<code>mem</code>写入。</li>
+<li>返回<code>keeping</code>。</li>
+</ul>
+<h3 id="simplify-trace"><a href="#simplify-trace" class="headerlink" title="simplify_trace"></a>simplify_trace</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> u8 simplify_lookup[<span class="number">256</span>] = &#123;</span><br><span class="line"></span><br><span class="line">  [<span class="number">0</span>]         = <span class="number">1</span>,</span><br><span class="line">  [<span class="number">1</span> ... <span class="number">255</span>] = <span class="number">128</span></span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>i</code>赋值为<code>MAP_SIZE &gt;&gt; 3</code>。</li>
+<li><code>while(i--)</code>，每8个字节遍历<ul>
+<li>如果<code>mem</code>不为0<ul>
+<li><code>u8 *mem8 = (u8 *)mem</code>，遍历每个字节，只要不为0，就会置为<code>128</code>，否则置为<code>1</code>。</li>
+</ul>
+</li>
+<li>否则，直接置为<code>0x0101010101010101ULL</code>，也就是字节值为1代表没有路径覆盖，值为128代表有。</li>
+</ul>
+</li>
 </ul>
 
       
@@ -1096,7 +1319,7 @@ close(fileno(plot_file));
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-fuzz"><span class="nav-number">3.</span> <span class="nav-text">afl-fuzz</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#setup-shm"><span class="nav-number">3.1.</span> <span class="nav-text">setup_shm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#maybe-add-auto"><span class="nav-number">3.2.</span> <span class="nav-text">maybe_add_auto</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#perform-dry-run"><span class="nav-number">3.3.</span> <span class="nav-text">perform_dry_run</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calibrate-case"><span class="nav-number">3.4.</span> <span class="nav-text">calibrate_case</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init-forkserver"><span class="nav-number">3.5.</span> <span class="nav-text">init_forkserver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#classify-counts"><span class="nav-number">3.6.</span> <span class="nav-text">classify_counts</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#update-bitmap-score"><span class="nav-number">3.7.</span> <span class="nav-text">update_bitmap_score</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#minimize-bits"><span class="nav-number">3.8.</span> <span class="nav-text">minimize_bits</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cull-queue"><span class="nav-number">3.9.</span> <span class="nav-text">cull_queue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mark-as-redundant"><span class="nav-number">3.10.</span> <span class="nav-text">mark_as_redundant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fuzz%E6%89%A7%E8%A1%8C"><span class="nav-number">3.11.</span> <span class="nav-text">fuzz执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%BE%AA%E7%8E%AF"><span class="nav-number">3.11.1.</span> <span class="nav-text">主循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fuzz-one"><span class="nav-number">3.11.2.</span> <span class="nav-text">fuzz_one</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CALIBRATION"><span class="nav-number">3.11.2.1.</span> <span class="nav-text">CALIBRATION</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TRIMMING"><span class="nav-number">3.11.2.2.</span> <span class="nav-text">TRIMMING</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PERFORMANCE-SCORE"><span class="nav-number">3.11.2.3.</span> <span class="nav-text">PERFORMANCE SCORE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SIMPLE-BITFLIP-dictionary-construction"><span class="nav-number">3.11.2.4.</span> <span class="nav-text">SIMPLE BITFLIP (+dictionary construction)</span></a></li></ol></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-fuzz"><span class="nav-number">3.</span> <span class="nav-text">afl-fuzz</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#setup-shm"><span class="nav-number">3.1.</span> <span class="nav-text">setup_shm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#maybe-add-auto"><span class="nav-number">3.2.</span> <span class="nav-text">maybe_add_auto</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#perform-dry-run"><span class="nav-number">3.3.</span> <span class="nav-text">perform_dry_run</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calibrate-case"><span class="nav-number">3.4.</span> <span class="nav-text">calibrate_case</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init-forkserver"><span class="nav-number">3.5.</span> <span class="nav-text">init_forkserver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#classify-counts"><span class="nav-number">3.6.</span> <span class="nav-text">classify_counts</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#update-bitmap-score"><span class="nav-number">3.7.</span> <span class="nav-text">update_bitmap_score</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#minimize-bits"><span class="nav-number">3.8.</span> <span class="nav-text">minimize_bits</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cull-queue"><span class="nav-number">3.9.</span> <span class="nav-text">cull_queue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mark-as-redundant"><span class="nav-number">3.10.</span> <span class="nav-text">mark_as_redundant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fuzz%E6%89%A7%E8%A1%8C"><span class="nav-number">3.11.</span> <span class="nav-text">fuzz执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%BE%AA%E7%8E%AF"><span class="nav-number">3.11.1.</span> <span class="nav-text">主循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fuzz-one"><span class="nav-number">3.11.2.</span> <span class="nav-text">fuzz_one</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CALIBRATION"><span class="nav-number">3.11.2.1.</span> <span class="nav-text">CALIBRATION</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TRIMMING"><span class="nav-number">3.11.2.2.</span> <span class="nav-text">TRIMMING</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PERFORMANCE-SCORE"><span class="nav-number">3.11.2.3.</span> <span class="nav-text">PERFORMANCE SCORE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SIMPLE-BITFLIP-dictionary-construction"><span class="nav-number">3.11.2.4.</span> <span class="nav-text">SIMPLE BITFLIP (+dictionary construction)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ARITHMETIC-INC-x2F-DEC"><span class="nav-number">3.11.2.5.</span> <span class="nav-text">ARITHMETIC INC&#x2F;DEC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#INTERESTING-VALUES"><span class="nav-number">3.11.2.6.</span> <span class="nav-text">INTERESTING VALUES</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DICTIONARY-STUFF"><span class="nav-number">3.11.2.7.</span> <span class="nav-text">DICTIONARY STUFF</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RANDOM-HAVOC"><span class="nav-number">3.11.2.8.</span> <span class="nav-text">RANDOM HAVOC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SPLICING"><span class="nav-number">3.11.2.9.</span> <span class="nav-text">SPLICING</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trim-case"><span class="nav-number">3.11.3.</span> <span class="nav-text">trim_case</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sync-fuzzers"><span class="nav-number">3.11.4.</span> <span class="nav-text">sync_fuzzers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#save-if-interesting"><span class="nav-number">3.11.5.</span> <span class="nav-text">save_if_interesting</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#simplify-trace"><span class="nav-number">3.11.6.</span> <span class="nav-text">simplify_trace</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
@@ -1137,7 +1360,7 @@ close(fileno(plot_file));
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">20.3k</span>
+    <span title="Site words total count">22.1k</span>
   
 </div>
 
