@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="fuzzy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AFL源码部分解析">
+<meta property="og:url" content="https://enllus1on.github.io/2024/01/19/AFL%E6%BA%90%E7%A0%81%E9%83%A8%E5%88%86%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="enllus1on&#39;s blog">
+<meta property="og:description" content="fuzzy">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-19T08:58:17.000Z">
+<meta property="article:modified_time" content="2024-02-03T06:27:06.000Z">
+<meta property="article:author" content="enllus1on">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://enllus1on.github.io/2024/01/19/AFL源码部分解析/"/>
+
+
+
+
+
+  <title>AFL源码部分解析 | enllus1on's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">enllus1on's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://enllus1on.github.io/2024/01/19/AFL%E6%BA%90%E7%A0%81%E9%83%A8%E5%88%86%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/kano.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="enllus1on's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">AFL源码部分解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-01-19T16:58:17+08:00">
+                2024-01-19
+              </time>
+            
+
+            
+              <span class="post-meta-divider">|</span>
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-check-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Post modified&#58;</span>
+              
+              <time title="Post modified" itemprop="dateModified" datetime="2024-02-03T14:27:06+08:00">
+                2024-02-03
+              </time>
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/fuzz/" itemprop="url" rel="index">
+                    <span itemprop="name">fuzz</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Words count in article&#58;</span>
+                
+                <span title="Words count in article">
+                  7.8k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time &asymp;</span>
+                
+                <span title="Reading time">
+                  34
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>fuzzy</p>
+<span id="more"></span>
+
+<h1 id="afl-as"><a href="#afl-as" class="headerlink" title="afl-as"></a>afl-as</h1><h2 id="add-instrumentation"><a href="#add-instrumentation" class="headerlink" title="add_instrumentation()"></a>add_instrumentation()</h2><p>在实际调用<code>as</code>前进行<code>add instrumentation</code>，也就是插桩。</p>
+<p>通过识别如下前导标签后，紧接着进行插桩 (只在<code>.text</code>段进行插桩)：</p>
+<ul>
+<li><code>main:</code>        - function entry point (always instrumented)</li>
+<li><code>.L0:</code>          - GCC branch label</li>
+<li><code>.LBB0_0:</code>    - clang branch label (only in clang mode)</li>
+<li><code>\tjnz foo</code>  - conditional branches</li>
+</ul>
+<p>如下为x64、x86桩代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> u8* trampoline_fmt_64 =</span><br><span class="line"></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;/* --- AFL TRAMPOLINE (64-BIT) --- */\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;.align 4\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;leaq -(128+24)(%%rsp), %%rsp\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movq %%rdx,  0(%%rsp)\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movq %%rcx,  8(%%rsp)\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movq %%rax, 16(%%rsp)\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movq $0x%08x, %%rcx\n&quot;</span></span><br><span class="line">  <span class="string">&quot;call __afl_maybe_log\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movq 16(%%rsp), %%rax\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movq  8(%%rsp), %%rcx\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movq  0(%%rsp), %%rdx\n&quot;</span></span><br><span class="line">  <span class="string">&quot;leaq (128+24)(%%rsp), %%rsp\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;/* --- END --- */\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> u8* trampoline_fmt_32 =</span><br><span class="line"></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;/* --- AFL TRAMPOLINE (32-BIT) --- */\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;.align 4\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;leal -16(%%esp), %%esp\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl %%edi,  0(%%esp)\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl %%edx,  4(%%esp)\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl %%ecx,  8(%%esp)\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl %%eax, 12(%%esp)\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl $0x%08x, %%ecx\n&quot;</span></span><br><span class="line">  <span class="string">&quot;call __afl_maybe_log\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl 12(%%esp), %%eax\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl  8(%%esp), %%ecx\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl  4(%%esp), %%edx\n&quot;</span></span><br><span class="line">  <span class="string">&quot;movl  0(%%esp), %%edi\n&quot;</span></span><br><span class="line">  <span class="string">&quot;leal 16(%%esp), %%esp\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span></span><br><span class="line">  <span class="string">&quot;/* --- END --- */\n&quot;</span></span><br><span class="line">  <span class="string">&quot;\n&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>最后再插入<code>main_payload_32</code>或<code>main_payload_64</code>，实际上就是写入<code>__afl_maybe_log</code>等一系列正式fuzz需要使用的函数和变量的汇编，，之后会详细解读。</p>
+<h2 id="main"><a href="#main" class="headerlink" title="main()"></a>main()</h2><p>设置随机种子值为<code>tv.tv_sec ^ tv.tv_usec ^ getpid()</code>，再设置好真正<code>as</code>的参数。当开启<code>ASAN</code>或<code>MSAN</code>时，插桩密度<code>inst_ratio</code>设置为<code>%33</code>左右，初始为<code>%100</code>。然后插桩，fork子进程用来实现真正的<code>as</code>，等待子进程结束后，<code>unlink</code>掉插桩完的文件，然后退出。</p>
+<h1 id="afl-clang-fast"><a href="#afl-clang-fast" class="headerlink" title="afl-clang-fast"></a>afl-clang-fast</h1><h2 id="afl-llvm-pass"><a href="#afl-llvm-pass" class="headerlink" title="afl-llvm-pass"></a>afl-llvm-pass</h2><p>llvm是用来进行代码优化，提供了IR，通过对IR操作，进行优化。对IR操作其实也就是插入桩代码，只不过<code>afl-as</code>是对汇编进行操作，而llvm是对IR操作。llvm提供模块化、标准化的一系列IR API，将程序分为<code>Module-Function-BasicBlock-Instruction-Operand&amp;Opcode</code>，层次结构清晰，可以直接遍历每个基本块方便地插桩。</p>
+<p>插入的IR Instruction效果如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cur_location = &lt;COMPILE_TIME_RANDOM&gt;; </span><br><span class="line">shared_mem[cur_location ^ prev_location]++; </span><br><span class="line">prev_location = cur_location &gt;&gt; <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="afl-llvm-rt"><a href="#afl-llvm-rt" class="headerlink" title="afl-llvm-rt"></a>afl-llvm-rt</h2><p><code>LLVM_MODE</code>有额外三种模式分别是<code>deffered instrumentation</code>、<code>persistent mode</code>、<code>trace-pc-guard</code></p>
+<h3 id="deferred-instrumentation"><a href="#deferred-instrumentation" class="headerlink" title="deferred instrumentation"></a>deferred instrumentation</h3><p>推迟<code>forkserver</code>的启动，启动时机为程序初始化工作后，但是在main函数之前。这样减少了初始化的开销或者程序解析<code>fuzz data</code>的开销</p>
+<p>选好合适的位置，插入下面的代码，即可启用该模式</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifdef</span> __AFL_HAVE_MANUAL_CONTROL</span></span><br><span class="line">  __AFL_INIT();</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p><code>__AFL_INIT</code>调用<code>__afl_manual_init</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __afl_manual_init(<span class="type">void</span>) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">static</span> u8 init_done;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!init_done) &#123;</span><br><span class="line"></span><br><span class="line">    __afl_map_shm();</span><br><span class="line">    __afl_start_forkserver();</span><br><span class="line">    init_done = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>__afl_map_shm</code>函数读取环境变量<code> &quot;__AFL_SHM_ID&quot;</code>来获得<code>shm_id</code>，然后调用<code>shmat</code>获取共享内存赋值给<code>_afl_area_ptr</code>。</p>
+<p><code>__afl_start_forkserver</code>逻辑如下：</p>
+<ul>
+<li>初始化<code>child_stopped</code>为0，通过<code>FORKSRV_FD + 1</code>fd向管道写入4个字节，告知<code>afl fuzz</code> <code>fork server</code>已经准备好开始了。</li>
+<li>进入<code>fuzz loop</code><ul>
+<li>通过<code>FORKSRV_FD</code>fd向管道读入4个字节赋值给<code>was_killed</code></li>
+<li>如果<code>child_stopped</code>和<code>was_killed</code>都不为空值，说明子进程停下了并且发出<code>SIGKILL</code>信号，那么通过<code>waitpid</code>函数回收子进程</li>
+<li>如果<code>child_stopped</code>为空值，那么<code>fork</code>一个子进程，并且关闭子进程与管道的通信，然后子进程退出<code>__afl_start_forkserver</code>函数，执行程序</li>
+<li>如果<code>child_stopped</code>不为空值，通过<code>kill(child_pid, SIGCONT)</code>重启子进程，并设置<code>child_stopped</code>为0。该分支仅针对<code>persistent mode</code>，因为只有该模式不<code>fork</code>完成fuzz，而是复用同一个进程。</li>
+<li>再通过<code>FORKSRV_FD + 1</code>fd向管道写入<code>child_pid</code>，告知<code>afl fuzz</code>子进程的pid。</li>
+<li>等待子进程结束，回收子进程，状态保存在<code>status</code>。如果为<code>persistent mode</code>，那么程序发出<code>SIGSTOP</code>信号，便结束等待，并且将<code>child_stopped</code>设置为1。</li>
+<li>通过<code>FORKSRV_FD + 1</code>fd向管道写入<code>status</code>，告知<code>afl fuzz</code>子进程的状态，并结束此次<code>fuzz</code>。</li>
+</ul>
+</li>
+</ul>
+<h3 id="persistent-mode"><a href="#persistent-mode" class="headerlink" title="persistent mode"></a>persistent mode</h3><p>当程序的某些API是无状态的或者读入不同的输入数据时，API的状态会自动重置，那么这个程序就可以长期存活复用，减少了<code>fork</code>的开销。</p>
+<p>通过向程序插入如下代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (__AFL_LOOP(<span class="number">1000</span>)) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Read input data. */</span></span><br><span class="line">  <span class="comment">/* Call library code to be fuzzed. */</span></span><br><span class="line">  <span class="comment">/* Reset state. */</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>__AFL_LOOP</code>调用<code>__afl_persistent_loop</code>，逻辑如下：</p>
+<ul>
+<li>第一次<code>loop</code>时，如果<code>is_persistent</code>为1，清空<code>__afl_area_pptr</code>，将<code>__afl_area_ptr[0]</code>设置为1，<code>__afl_prev_loc</code>设置为0，<code>cyclic_cnt</code>设置为<code>max_cnt</code>，也就是循环次数。</li>
+<li>不是第一次的<code>loop</code>，<code>--cyclic_cnt</code>，发出信号<code>SIGSTOP</code>，程序暂停，直到程序被重启，将<code>__afl_area_ptr[0]</code>设置为1，<code>__afl_prev_loc</code>设置为0。<ul>
+<li>当<code>cyclic_cnt</code>为0时，也就是结束了所有<code>fuzz</code>时，将<code>__afl_area_ptr</code>指向<code>__afl_area_initial</code>，也就是无用数组，不再记录覆盖率等数据。</li>
+</ul>
+</li>
+</ul>
+<h3 id="trace-pc-guard"><a href="#trace-pc-guard" class="headerlink" title="trace-pc-guard"></a>trace-pc-guard</h3><p>该模式不是通过基本块，而是边来插桩。要使用这个模式需要重新编译<code>LLVM_MODE</code>，通过</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AFL_TRACE_PC=1 make clean all</span><br></pre></td></tr></table></figure>
+
+<p>从而定义了<code>DUSE_TRACE_PC</code>宏，从而在执行<code>afl-clang-fast</code>传入 <code>-fsanitize-coverage=trace-pc-guard</code>参数</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ifdef</span> AFL_TRACE_PC</span><br><span class="line">  CFLAGS    += -DUSE_TRACE_PC=1</span><br><span class="line"><span class="keyword">endif</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="sanitizer-cov-trace-pc-guard"><a href="#sanitizer-cov-trace-pc-guard" class="headerlink" title="__sanitizer_cov_trace_pc_guard"></a>__sanitizer_cov_trace_pc_guard</h4><p>这个函数在经过每条<code>edge</code>都会调用</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __sanitizer_cov_trace_pc_guard(<span class="type">uint32_t</span>* guard) &#123;</span><br><span class="line">  __afl_area_ptr[*guard]++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过<code>guard</code>指向的值确定共享内存对应的索引</p>
+<h4 id="sanitizer-cov-trace-pc-guard-init"><a href="#sanitizer-cov-trace-pc-guard-init" class="headerlink" title="__sanitizer_cov_trace_pc_guard_init"></a>__sanitizer_cov_trace_pc_guard_init</h4><p>该函数来初始化<code>guard</code>指向的值</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> __sanitizer_cov_trace_pc_guard_init(<span class="type">uint32_t</span>* start, <span class="type">uint32_t</span>* stop) &#123;</span><br><span class="line"></span><br><span class="line">  u32 inst_ratio = <span class="number">100</span>;</span><br><span class="line">  u8* x;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (start == stop || *start) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">  x = <span class="built_in">getenv</span>(<span class="string">&quot;AFL_INST_RATIO&quot;</span>);</span><br><span class="line">  <span class="keyword">if</span> (x) inst_ratio = <span class="built_in">atoi</span>(x);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!inst_ratio || inst_ratio &gt; <span class="number">100</span>) &#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(stderr, <span class="string">&quot;[-] ERROR: Invalid AFL_INST_RATIO (must be 1-100).\n&quot;</span>);</span><br><span class="line">    <span class="built_in">abort</span>();</span><br><span class="line">  &#125;</span><br><span class="line">    </span><br><span class="line">  <span class="comment">/* Make sure that the first element in the range is always set - we use that</span></span><br><span class="line"><span class="comment">     to avoid duplicate calls (which can happen as an artifact of the underlying</span></span><br><span class="line"><span class="comment">     implementation in LLVM). */</span></span><br><span class="line"></span><br><span class="line">  *(start++) = <span class="built_in">R</span>(MAP_SIZE - <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (start &lt; stop) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">R</span>(<span class="number">100</span>) &lt; inst_ratio) *start = <span class="built_in">R</span>(MAP_SIZE - <span class="number">1</span>) + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span> *start = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    start++;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="afl-fuzz"><a href="#afl-fuzz" class="headerlink" title="afl-fuzz"></a>afl-fuzz</h1><h2 id="setup-shm"><a href="#setup-shm" class="headerlink" title="setup_shm"></a>setup_shm</h2><ul>
+<li>如果<code>in_bitmap</code>为空，则将<code>virgin_bits</code>初始化每<code>bit</code>都为1。</li>
+<li>初始化<code>virgin_tmout、virgin_crash</code>每<code>bit</code>为1。</li>
+<li>通过<code>shmget</code>开辟一块读写共享内存，返回该内存块对应的共享标识符到<code>shm_id</code>。注册<code>atexit handler</code>为<code>remove_shm</code>，用来当程序结束时，删除共享内存块。</li>
+<li>如果<code>dumb_mode</code>为空，则设置<code>SHM_ENV_VAR</code>为<code>shm_id</code>。</li>
+<li>通过<code>shmat</code>获取对该共享内存的访问，并将共享内存地址赋值给<code>trace_bits</code></li>
+</ul>
+<h2 id="maybe-add-auto"><a href="#maybe-add-auto" class="headerlink" title="maybe_add_auto"></a>maybe_add_auto</h2><ul>
+<li><p>如果设置<code>MAX_AUTO_EXTRAS</code>或者<code>USE_AUTO_EXTRAS</code>为0，则直接返回</p>
+</li>
+<li><p>for i &#x3D; 1 to len，如果<code>mem[0]</code>和<code>mem[i]</code>不同，则跳出循环。</p>
+</li>
+<li><p>如果<code>i</code>等于<code>len</code>，也就是<code>mem</code>里的字节值都和第一个字节值相等，则直接返回。</p>
+</li>
+<li><p>如果<code>len</code>等于2，就和<code>interesting_16</code>数组里的元素比较，有相同就直接返回。</p>
+</li>
+<li><p>如果<code>len</code>等于4，就和<code>interesting_32</code>数组里的元素比较，有相同就直接返回。</p>
+</li>
+<li><p>for <code>i</code> &#x3D; 0 to <code>extra_cnt</code>，如果<code>extras[i].len</code>≥<code>len</code>就跳出循环，因为<code>extras</code>数组按照长度排序。</p>
+</li>
+<li><p>继续遍历<code>i</code>，如果<code>i</code>＜extras_cnt并且<code>extras[i].len</code>＝＝<code>len</code>，用<code>memcmp_nocase(extras[i].data, mem, len)</code>，如果这两个内容是一样的，则直接返回。</p>
+</li>
+<li><p><code>auto_changed</code>置为1。</p>
+</li>
+<li><p>for <code>i</code> &#x3D; 0 to <code>a_extras_cnt</code></p>
+<ul>
+<li>如果<code>a_extras[i].len</code>等于<code>len</code>并且<code>a_extras[i].data</code>和<code>mem</code>内容相同<ul>
+<li><code>a_extras[i].hit_cnt++</code>，跳转到<code>sort_a_extras</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>如果<code>a_extras_cnt</code>小于<code>MAX_AUTO_EXTRAS</code>，说明<code>a_extras</code>数组没被填满，则用<code>mem</code>、<code>len</code>构造新的元素放入这个数组。</p>
+</li>
+<li><p>否则，从<code>a_extras</code>数组后半段随机挑选个元素，将它的<code>data</code>替换为<code>ck_memdup(mem, len)</code>，长度替换为<code>len</code>，<code>hit_cnt</code>置为0。</p>
+</li>
+<li><p><code>sort_a_extras</code></p>
+<ul>
+<li>先用<code>qsort(a_extras, a_extras_cnt, sizeof(struct extra_data), compare_extras_use_d);</code>，按照<code>hit_cnt</code>递减排序。</li>
+<li><code>qsort(a_extras, MIN(USE_AUTO_EXTRAS, a_extras_cnt),sizeof(struct extra_data), compare_extras_len); </code>，按照<code>len</code>递增排序。</li>
+</ul>
+</li>
+</ul>
+<h2 id="perform-dry-run"><a href="#perform-dry-run" class="headerlink" title="perform_dry_run"></a>perform_dry_run</h2><p>执行所有测试用例，检查是否正常工作</p>
+<ul>
+<li>打开<code>q-&gt;fname</code>，并读取内容到<code>use_mem</code></li>
+<li><code>res = calibrate_case(argv, q, use_mem, 0, 1)</code>校准测试用例</li>
+<li>如果<code>res</code>为<code>crash_mode</code>或<code>FAULT_NOBITS</code>，则输出<code>SAYF(cGRA &quot;    len = %u, map size = %u, execspeed = %llu us\n&quot; cRST, q-&gt;len, q-&gt;bitmap_size, q-&gt;exec_us);</code></li>
+<li>根据<code>res</code>判断错误结果：<ul>
+<li><code>FAULT_NONE</code>：<ul>
+<li>如果<code>q</code>是第一个测试用例，则调用<code>check_map_coverage</code>，评估<code>map coverage</code>：<ul>
+<li>如果<code>trace_bits</code>路径数小于100，则直接返回</li>
+<li><code>trace_bits</code>数组中后半段有值，则直接返回</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>FAULT_TMOUT</code>:<ul>
+<li>如果指定了<code>-t</code>参数，则<code>timeout_given</code>参数设置为<code>2</code>，则警告<code>Test case results in a timeout (skipping)</code>，<code>q-&gt;cal_failed</code>设置为<code>CAL_CHANCES</code>，<code>cal_failures</code>计数++。</li>
+</ul>
+</li>
+<li><code>FAULT_CRASH</code>:<ul>
+<li>抛出异常<code>FATAL(&quot;Test case &#39;%s&#39; results in a crash&quot;, fn);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_ERROR</code>:<ul>
+<li>抛出异常<code>FATAL(&quot;Unable to execute target application (&#39;%s&#39;)&quot;, argv[0]);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_NOINST</code>：<ul>
+<li>抛出异常<code>FATAL(&quot;No instrumentation detected&quot;);</code>。</li>
+</ul>
+</li>
+<li><code>FAULT_NOBITS</code>:<ul>
+<li>没有出现路径信息，说明这个测试样例是无用的。<code>useless_at_start++</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果<code>q-&gt;var_behavior</code>不为空，则说明该测试用例在相同条件下，多次执行，有不同的路径记录，抛出警告<code>WARNF(&quot;Instrumentation output varies across runs.&quot;);</code></li>
+<li><code>q = q-&gt;next</code>，执行下个测试样例。</li>
+</ul>
+<h2 id="calibrate-case"><a href="#calibrate-case" class="headerlink" title="calibrate_case"></a>calibrate_case</h2><ul>
+<li><p>如果<code>q-&gt;exec_cksum == 0</code>说明这个case是第一次运行，设置<code>first_run</code>为1。</p>
+</li>
+<li><p><code>q-&gt;cal-failed++</code></p>
+</li>
+<li><p>设置<code>stage_name</code>为<code>calibration</code>，并且如果<code>fast_cal</code>不为0，则设置<code>stage_max</code>为3否则为8。<code>stage_max</code>是最大校验次数。</p>
+</li>
+<li><p>当<code>dumb_mode != 1 &amp;&amp; !no_forkserver &amp;&amp; !forksrv_pid</code>，调用<code>init_forserver(argv)</code>。也就是不处于<code>dumb_mode</code>并且<code>no_forkserver</code>为空，还未启动<code>forkserver</code>，就初始化<code>forkserver</code>。</p>
+</li>
+<li><p>如果这个<code>queue_entry</code>不来自<code>input</code>文件夹，而是评估新case，则此时<code>q-&gt;exec_cksum</code>不为0，拷贝<code>trace_bits</code>到<code>first_trace</code>，并计算<code>has_new_bits</code>，如果这个值比<code>new_bits</code>大，则更新<code>new_bits</code>为这个值。</p>
+</li>
+<li><p>执行<code>calibrate stage</code>，共<code>stage_max</code>轮</p>
+<ul>
+<li>如果不是第一次执行，就调用<code>show_status</code>。</li>
+<li>调用<code>run_target(argv, use_tmout)</code>将结果赋值给<code>fault</code>。</li>
+<li>如果<code>stop_soon</code>不为空或者<code>fault != crash_mode</code>，就跳到<code>abort_calibration</code>标签处。</li>
+<li>如果不处于<code>dumb_mode</code>并且处于第一次循环，并且<code>count_bytes(trace_bits)</code>为0，也就是没有路径记录，则设置<code>fault</code>为<code>FAULT_NOINST</code>，跳到<code>abort_calibration</code>标签处。</li>
+<li>根据当前的<code>trace_bits</code>通过<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>函数计算赋值给<code>cksum</code>。</li>
+<li>如果<code>q-&gt;exec_cksum != cksum</code>说明这个case第一次执行或者这次执行和上次执行的路径不同，则调用<code>has_new_bits(virgin_bits)</code>计算，计算的值如果大于<code>new_bits</code>，则更新<code>new_bits</code>。<ul>
+<li>如果<code>q-&gt;exec_cksum</code>不为0，说明不是第一次执行，说明执行触发的路径可变，则遍历整个<code>shm</code>，如果<code>!var_bytes[i] &amp;&amp; first_trace[i] != trace_bits[i]</code>，则说明当前索引的路径可变，设置<code>var_bytes[i]</code>为1，将<code>stage_max</code>更新为40。将<code>var_detected</code>设置为1。</li>
+<li>否则就是第一次执行，将<code>q-&gt;exec_cksum</code>设置为<code>cksum</code>，将<code>trace_bits</code>当前的路径记录拷贝给<code>first_trace</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>将执行<code>calibrate stage</code>的总时间加到<code>total_cal_us</code>。</p>
+</li>
+<li><p>将执行总次数<code>stage_max</code>加到<code>total_cal_cycles</code>。</p>
+</li>
+<li><p><code>q-&gt;exec_us</code>更新为执行一次的平均时间。       </p>
+</li>
+<li><p><code>q-&gt;bitmap_size</code>更新为覆盖的路径数。</p>
+</li>
+<li><p><code>q-&gt;cal_failed</code>设置为0。</p>
+</li>
+<li><p><code>total_bitmap_size</code>加上<code>q-&gt;bitmap_size</code>。</p>
+</li>
+<li><p><code>total_bitmap_entries++</code>。</p>
+</li>
+<li><p><code>update_bitmap_score(q)</code></p>
+</li>
+<li><p>如果<code>!dumb_mode &amp;&amp; first_run &amp;&amp; !fault &amp;&amp; !new_bits</code>，则设置<code>fault</code>为<code>FAULT_NOBITS</code>。</p>
+</li>
+<li><p><code>abort_calibration</code>：</p>
+<ul>
+<li>如果<code>new_bits == 2 &amp;&amp; !q-&gt;has_new_cov</code>，说明当前<code>queue</code>发现了新路径，设置<code>q-&gt;has_new_cov</code>为1，并且<code>queue_with_cov++</code>。</li>
+<li>如果<code>var_detected</code>不为0，<code>var_byte_count</code>赋值为<code>count_bytes(var_bytes)</code>，如果<code>q-&gt;var_behavior</code>为0，调用<code>mark_as_variable(q)</code>，将当前的<code>queue</code>和<code>out_dir/queue/.state/variable_behavior/filename</code>创建符号链接，并且设置<code>q-&gt;var_behavior</code>为1。<code>queued_variable++</code>。</li>
+</ul>
+</li>
+<li><p>返回<code>fault</code>。</p>
+</li>
+</ul>
+<h2 id="init-forkserver"><a href="#init-forkserver" class="headerlink" title="init_forkserver"></a>init_forkserver</h2><ul>
+<li><p>通过<code>pipe</code>函数创建<code>st_pipe</code>状态管道、<code>ctl_pipe</code>控制管道。</p>
+</li>
+<li><p><code>fork</code>进程赋值给<code>forksrv_pid</code></p>
+</li>
+<li><p>当前进程为子进程</p>
+<ul>
+<li><p>重定向标准输出、标准错误到<code>dev_null_ld</code>。如果设置了<code>out_file</code>则重定向标准输入到<code>dev_null_fd</code>，否则重定向到<code>out_fd</code>，并且关闭<code>out_fd</code>。</p>
+</li>
+<li><p>重定向<code>FORKSRV_FD</code>到<code>ctl_pipe[0]</code>，即通过<code>FORKSRV_FD</code>来读取控制管道。</p>
+</li>
+<li><p>重定向<code>FORKSRV_FD + 1</code>到<code>st_pipe[1]</code>，即通过<code>FORKSRV_FD + 1</code>来写入状态管道。</p>
+</li>
+<li><p>关闭不必要的文件描述符。</p>
+<ul>
+<li><pre><code class="c++">close(ctl_pipe[0]);
+close(ctl_pipe[1]);
+close(st_pipe[0]);
+close(st_pipe[1]);
+
+close(out_dir_fd);
+close(dev_null_fd);
+close(dev_urandom_fd);
+close(fileno(plot_file));
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  - 如果`LD_BIND_LAZY`环境变量为空，则设置`LD_BIND_NOW`环境变量为1。</span><br><span class="line"></span><br><span class="line">  - 设置`ASAN_OPTIONS`环境变量为`abort_on_error=1:` `detect_leaks=0:` `symbolize=0:` `allocator_may_return_null=1`，同理设置`MSAN_OPTIONS`。</span><br><span class="line"></span><br><span class="line">  - 调用`execv(target_path, argv)`，替换进程空间，执行`target_path`。</span><br><span class="line"></span><br><span class="line">  - 如果调用失败，则将`*(u32 *)tarce_bits`设置为`0xfee1dead`，并退出。</span><br><span class="line"></span><br><span class="line">- 当前进程为父进程</span><br><span class="line"></span><br><span class="line">  - 关闭`ctl_pipe[0]` `st_pipe[1]`。</span><br><span class="line">  - 设置`fsrv_ctl_fd`为`ctl_pipe[1]`，设置`fsrv_st_fd`为`st_pipe[0]`。</span><br><span class="line">  - 等待`forkserver`启动，从`fsrv_st_fd`读取4个字节到`status`。</span><br><span class="line">  - 如果读取长度为4个字节，说明启动成功，返回。</span><br><span class="line"></span><br><span class="line">## has_new_bits</span><br><span class="line"></span><br><span class="line">- 将`trace_bits`的首`u64`元素地址赋值给`current`，`virgin_map`的首`u64`地址赋值给`virgin`。</span><br><span class="line">- 将`i`赋值为`MAP_SIZE &gt;&gt; 3`，因为**每8个字节遍历`MAP`**。</span><br><span class="line">- 进入while循环遍历map</span><br><span class="line">  - 如果`*current`不为0且`*current &amp; *virgin`不为0，说明发现覆盖了新路径或者某条路径的执行次数发生了变化</span><br><span class="line">    - 如果`ret`小于2</span><br><span class="line">      - `cur`赋值为`(u8 *)current`，`vir`赋值为`(u8 *)virgin`。</span><br><span class="line">      - 在这8个字节中，如果有一个字节`*cur`不为0且`*vir == 0xff`，即发现覆盖了新路径，设置`ret`为2，否则为1。</span><br><span class="line">    - `*virgin &amp;= ~*current`</span><br><span class="line">- 如果`ret`不为0且`virgin_map == virgin_bits`，那么`bitmap_changed`设置为1。</span><br><span class="line">- 返回`ret`。</span><br><span class="line"></span><br><span class="line">## count_bytes</span><br><span class="line"></span><br><span class="line">- 设置`ptr = (u32 *)mem`。</span><br><span class="line">- `i == (MAP_SIZE &gt;&gt; 2)`，`ret = 0`。</span><br><span class="line">- 进入while循环，每四个字节遍历</span><br><span class="line">  - `v = *(ptr)`</span><br><span class="line">  - 如果`v`为0，即当前4个字节没有路径覆盖，直接`continue`。</span><br><span class="line">  - 否则每个字节如果不为0，都会`ret++`。</span><br><span class="line">- 返回`ret`。</span><br><span class="line"></span><br><span class="line">## run_target</span><br><span class="line"></span><br><span class="line">- 初始化`trace_bits`，全部置为0。</span><br><span class="line"></span><br><span class="line">- 如果`dumb_mode == 1`或者`no_forkserver`不为0</span><br><span class="line"></span><br><span class="line">  - `fork`进程赋值给`child_pid`。</span><br><span class="line"></span><br><span class="line">  - 当前进程为子进程：</span><br><span class="line"></span><br><span class="line">    - 重定向标准输出、标准错误到`dev_null_fd`。</span><br><span class="line"></span><br><span class="line">    - 如果`out_file`不为空，则重定向标准输入到`dev_null_fd`。否则，重定向标准输入到`out_fd`，关闭`out_fd`。</span><br><span class="line"></span><br><span class="line">    - 关闭不需要的`fd`：</span><br><span class="line"></span><br><span class="line">      - ```c++</span><br><span class="line">        close(dev_null_fd);</span><br><span class="line">        close(out_dir_fd);</span><br><span class="line">        close(dev_urandom_fd);</span><br><span class="line">        close(fileno(plot_file));</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+<li><p>设置<code>ASAN_OPTIONS</code>、<code>MSAN_OPTIONS</code>。</p>
+</li>
+<li><p><code>execv</code>替换进程空间，执行<code>target_path</code>。</p>
+</li>
+<li><p>替换失败，则<code>*trace_bits = 0xfee1dead</code>，<code>exit(0)</code>退出。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>否则就是处于有<code>forkserver</code>的模式，且<code>forkserver</code>已经初始化完毕。</p>
+</li>
+<li><p>通过<code>fsrv_ctl_fd</code>向控制管道写入<code>prev_timed_out</code>4个字节，表示<code>forkserver</code>可以开始<code>fork</code>子进程进行<code>fuzz</code>。</p>
+</li>
+<li><p>通过<code>fsrv_st_fd</code>向状态管道读入4个字节，赋值到<code>child_pid</code>，表示<code>forkserver</code> <code>fork</code>出来的子进程<code>pid</code>。</p>
+</li>
+<li><p>如果<code>dumb_mode == 1</code>或者<code>no_forkserver</code>不为0</p>
+<ul>
+<li>则<code>waitpid</code>等待子进程结束，状态变量保存在<code>status</code>。</li>
+</ul>
+</li>
+<li><p>否则，通过<code>fsrv_st_fd</code>向状态管道读取4个字节，赋值到<code>status</code>，表示子进程执行完最后的状态。</p>
+</li>
+<li><p>计算<code>exec_ms</code>，即<code>target</code>执行时间，并将<code>total_execs++</code>。</p>
+</li>
+<li><p>将<code>trace_bits</code>首4个字节的值赋值给<code>tb4</code>。</p>
+</li>
+<li><p>调用<code>classify_counts((u64 *)trace_bits)</code>。</p>
+</li>
+<li><p><code>child_timed_out</code>赋值给<code>prev_timed_out</code>。</p>
+</li>
+<li><p>如果<code>WIFSIGNALED(status)</code>不为0且<code>!stop_soon</code>，也就是<code>target</code>执行完返回的是异常状态</p>
+<ul>
+<li>通过<code>WTERMSIG(status)</code>获得异常状态信号值，赋值给<code>kill_signal</code>。</li>
+<li>如果<code>child_timed_out</code>不为0且<code>kill_signal</code>等于<code>SIGKILL</code>，说明<code>target</code>执行超时了，返回<code>FAULT_TMOUT</code>。</li>
+<li>否则返回<code>FAULT_CRASH</code>。</li>
+</ul>
+</li>
+<li><p>如果<code>uses_asan</code>不为0且<code>WEXITSTATUS(status) == MSAN_ERROR</code>，也就是<code>target</code>退出状态是<code>MSAN_ERROR</code>，返回<code>FAULT_CRASH</code>。</p>
+</li>
+<li><p>如果(<code>dumb_mode</code>为1或者<code>no_forkserver</code>不为0)且<code>tb4</code>等于<code>0xfee1dead</code>，也就是<code>execv</code>调用失败，返回<code>FAULT_ERROR</code>。</p>
+</li>
+<li><p>如果<code>exec_tmout</code>大于等于<code>timeout</code>且<code>exec_ms</code>大于<code>slowest_exec_ms</code>，将<code>slowest_exec_ms</code>赋值给<code>exec_ms</code>。</p>
+</li>
+<li><p>返回<code>FAULT_NONE</code>。</p>
+</li>
+</ul>
+<h2 id="classify-counts"><a href="#classify-counts" class="headerlink" title="classify_counts"></a>classify_counts</h2><ul>
+<li><p><code>i</code>赋值为<code>MAP_SIZE &gt;&gt; 3</code>，即8个字节遍历。</p>
+</li>
+<li><p>进入while循环遍历</p>
+<ul>
+<li><p>如果<code>*mem</code>不为0：</p>
+<ul>
+<li><p><code>mem16 = (u16 *)mem</code>，每2个字节赋值。</p>
+</li>
+<li><p>每2个字节通过<code>count_class_lookup16[*mem16]</code>取到对应的值。</p>
+</li>
+<li><pre><code class="c++">EXP_ST void init_count_class16(void)
+&#123;
+
+  u32 b1, b2;
+
+  for (b1 = 0; b1 &lt; 256; b1++)
+    for (b2 = 0; b2 &lt; 256; b2++)
+      count_class_lookup16[(b1 &lt;&lt; 8) + b2] =
+          (count_class_lookup8[b1] &lt;&lt; 8) |
+          count_class_lookup8[b2];
+&#125;
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- ```c++</span><br><span class="line">  static const u8 count_class_lookup8[256] = &#123;</span><br><span class="line">  </span><br><span class="line">    [0]           = 0,</span><br><span class="line">    [1]           = 1,</span><br><span class="line">    [2]           = 2,</span><br><span class="line">    [3]           = 4,</span><br><span class="line">    [4 ... 7]     = 8,</span><br><span class="line">    [8 ... 15]    = 16,</span><br><span class="line">    [16 ... 31]   = 32,</span><br><span class="line">    [32 ... 127]  = 64,</span><br><span class="line">    [128 ... 255] = 128</span><br><span class="line">  </span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+<li><p><code>count_class_lookup16</code>是为加快分类速度，<code>count_class_lookup8</code>是使不同的执行次数更有区分度、稀疏化，也减小了微小执行次数变化的干扰。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="update-bitmap-score"><a href="#update-bitmap-score" class="headerlink" title="update_bitmap_score"></a>update_bitmap_score</h2><p>update top_rated[]</p>
+<p>当我们碰到新路径时，我们调用<code>update_bitmap_score</code>来看看这个路径是否比其他已有的更<code>favorable</code>，这个<code>favorable</code>目的在于能够有能触发<code>bitmap</code>所有<code>bit</code>的最小路径集合，专注于<code>fuzz</code>这些路径，而忽略其他的。</p>
+<ul>
+<li><p>用<code>q-&gt;exec_us * q-&gt;len</code>赋值给<code>fav_factor</code>，即将当前<code>queue</code>的执行时间和<code>queue</code>的长度的乘积作为fav因子，赋值给<code>fav_factor</code>。</p>
+</li>
+<li><p>按字节for循环遍历<code>map</code></p>
+<ul>
+<li>如果当前字节<code>trace_bits</code>不为0<ul>
+<li>如果当前字节<code>top_rated</code>不为0<ul>
+<li>如果<code>fav_factor</code>大于当前字节<code>top_rated</code>的fav因子，则直接<code>continue</code></li>
+<li><code>--top_rated[i]-&gt;tc_ref</code>，减少当前字节<code>top_rated</code>的引用计数，如果减到0时，则释放掉<code>top_rated[i]-&gt;trace_mini</code>，将<code>top_rated[i]-&gt;trace_mini</code>置为0，即丢弃它记录的<code>trace_mini</code>。</li>
+</ul>
+</li>
+<li>将<code>top_rated[i]</code>赋值为当前<code>queue</code>，<code>q-&gt;tc_ref++</code>。</li>
+<li>如果<code>q-&gt;trace_mini</code>为空<ul>
+<li>则申请<code>MAP &gt;&gt; 3</code>的空间，将地址赋值给<code>q-&gt;trace_mini</code>，调用<code>minimize_bits(q-&gt;trace_mini, trace_bits)</code>。</li>
+</ul>
+</li>
+<li><code>score_changed</code>置为1。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="minimize-bits"><a href="#minimize-bits" class="headerlink" title="minimize_bits"></a>minimize_bits</h2><p>将<code>trace_bits</code>压缩到更小的<code>bitmap</code>，这个<code>bitmap</code>的大小是<code>MAPSIZE &gt;&gt; 3</code>，这两个<code>bitmap</code>都是按照字节操作的，所以要把原来8个字节压缩到1个字节，且抛弃掉计数信息。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">minimize_bits</span><span class="params">(u8 *dst, u8 *src)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">  u32 i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">while</span> (i &lt; MAP_SIZE)</span><br><span class="line">  &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (*(src++))</span><br><span class="line">      dst[i &gt;&gt; <span class="number">3</span>] |= <span class="number">1</span> &lt;&lt; (i &amp; <span class="number">7</span>);</span><br><span class="line">    i++;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>原来<code>map</code>字节保存的索引通过<code>&gt;&gt; 3</code>实现，因为8个字节要映射到1个字节，原来的 路径存在信息 保存在字节里，现在保存在对应的<code>bit</code>上，通过<code>|= 1 &lt;&lt; (i &amp; 7)</code>实现</p>
+<h2 id="cull-queue"><a href="#cull-queue" class="headerlink" title="cull_queue"></a>cull_queue</h2><p>从<code>top_rated[]</code>选出<code>favored</code>。</p>
+<ul>
+<li>如果<code>dumb_mode</code>不为0或者<code>score_changed</code>等于0，则直接返回。</li>
+<li><code>score_changed</code>赋值为0。</li>
+<li>初始化<code>temp_v</code>每<code>bit</code>上都为1，<code>temp_v</code>为压缩<code>bitmap</code>。</li>
+<li>初始化<code>queued_favored</code>和<code>pending_favored</code>为0，遍历<code>queue</code>中每个<code>entry</code>，将<code>favored</code>都置为0。</li>
+<li>按字节for循环遍历<code>map</code><ul>
+<li>如果当前字节<code>top_rated</code>不为0且<code>temp_v</code>对应的索引上的值不为0<ul>
+<li>则遍历<code>top_rated[i]-&gt;trace_mini</code>每个字节，通过<code>temp_v[j] &amp;= ~top_rated[i]-&gt;trace_mini[j]</code>，清除掉<code>temp_v</code>对应的路径信息。</li>
+<li><code>top_rated[i]-&gt;favored</code>置为1，标记为<code>favored</code>。</li>
+<li><code>queued_favored++</code>。</li>
+<li>如果<code>top_rated[i]-&gt;was_fuzzed</code>为空，也就是<code>entry</code>还没被<code>fuzz</code>过，<code>pending_favored++</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>遍历<code>queue</code>的每个<code>entry</code>，调用<code>mark_as_redundant(q, !q-&gt;favored)</code>，标记是否是<code>redundant</code>。</li>
+</ul>
+<h2 id="mark-as-redundant"><a href="#mark-as-redundant" class="headerlink" title="mark_as_redundant"></a>mark_as_redundant</h2><ul>
+<li>如果<code>state</code>等于<code>q-&gt;fs_redundant</code>，则直接返回。</li>
+<li><code>q-&gt;fs_redundant</code>赋值为<code>state</code>。</li>
+<li>如果<code>state</code>等于1<ul>
+<li>则创建<code>out_file/queue/.state/redundant_edges/fname</code>。</li>
+</ul>
+</li>
+<li>否则<ul>
+<li>删除<code>out_file/queue/.state/redundant_edges/fname</code>。</li>
+</ul>
+</li>
+</ul>
+<h2 id="fuzz执行"><a href="#fuzz执行" class="headerlink" title="fuzz执行"></a>fuzz执行</h2><h3 id="主循环"><a href="#主循环" class="headerlink" title="主循环"></a>主循环</h3><ul>
+<li><p>精简队列<code>cull_queue</code></p>
+</li>
+<li><p>如果<code>queue_cur</code>为空，即遍历完队列所有的case或者还未进行过fuzz</p>
+<ul>
+<li><code>queue_cycle++</code>，<code>current_entry</code>置为0，<code>cur_skipped_paths</code>置为0，<code>queue_cur</code>重新置为<code>queue</code>，代表要开始新的一轮fuzz。</li>
+<li>如果<code>seek_to</code>不为空，就从<code>seek_to</code>指定的case开始fuzz。</li>
+<li><code>show_stats</code>刷新展示界面。</li>
+<li>如果<code>queued_paths</code>等于<code>prev_queued</code>，也就是完成一次完整fuzz后，都没发现新的路径。<ul>
+<li>如果<code>use_splicing</code>不为0，则<code>cycles_wo_finds++</code>，否则设置<code>use_spicing</code>为1。</li>
+</ul>
+</li>
+<li>否则，<code>cycles_wo_finds</code>置为0。</li>
+<li>更新<code>prev_queued</code>为<code>queued_paths</code>。</li>
+<li>如果<code>sync_id</code>不为0且<code>queue_cycle</code>等于1且环境变量<code>AFL_IMPORT_FIRST</code>不为空，则调用<code>sync_fuzzers(use_argv)</code>。</li>
+</ul>
+</li>
+<li><p>调用<code>fuzz_one()</code>对<code>queue_cur</code>进行一次fuzz，将结果返回给<code>skipped_fuzz</code>。</p>
+</li>
+<li><p>如果<code>stop_soon</code>为0且<code>sync_id</code>不为空且<code>skipped_fuzz</code>为0</p>
+<ul>
+<li><code>sync_interval_cnt++</code>，当它为5的倍数时，<code>sync_fuzzers(use_argv)</code>同步fuzzer。</li>
+</ul>
+</li>
+<li><p><code>queue_cur = queue_cur-&gt;next; current_entry++</code>，开始fuzz下一个case。</p>
+</li>
+</ul>
+<h3 id="fuzz-one"><a href="#fuzz-one" class="headerlink" title="fuzz_one"></a>fuzz_one</h3><ul>
+<li>如果<code>pending_favored</code>不为0<ul>
+<li>如果<code>queue_cur-&gt;was_fuzzed</code>不为0或者<code>queue_cur-&gt;favored</code>为0，即当前的case已经被fuzz过或者它不是<code>favored</code>，就有99%的概率直接返回1。</li>
+</ul>
+</li>
+<li>否则，如果不处于<code>dumb_mode</code>且<code>queue_cur</code>不是<code>favored</code>且<code>queued_paths</code>超过10，即队列里的case数超过10<ul>
+<li>如果<code>queue_cycle</code>大于1且<code>queue_cur</code>没有被fuzz过，就有75%的概率直接返回1。否则被fuzz过，就有95%概率直接返回1。</li>
+</ul>
+</li>
+<li>打开该case对应的文件，将内容通过<code>mmap</code>映射到内存，将地址返回给<code>orig_in</code>和<code>in_buf</code>。</li>
+<li>申请<code>queue_cur-&gt;len</code>大小的内存，将地址返回给<code>out_buf</code>。</li>
+<li><code>cur_depth</code>赋值为<code>queue_cur-&gt;depth</code>。</li>
+</ul>
+<h4 id="CALIBRATION"><a href="#CALIBRATION" class="headerlink" title="CALIBRATION"></a>CALIBRATION</h4><ul>
+<li>如果当前<code>queue_cur</code>出现过校验错误<ul>
+<li>赋值<code>res</code>为<code>FAULT_TMOUT</code>。</li>
+<li>如果<code>queue_cur-&gt;cal_failed</code>小于3<ul>
+<li><code>queue_cur-&gt;exec_cksum</code>置为0，调用<code>calibrate_case(argv, queue_cur, in_buf, queue_cycle - 1, 0)</code>返回值赋给<code>res</code>。</li>
+<li>如果<code>res</code>等于<code>FAULT_ERROR</code>，则抛出错误<code>FATAL(&quot;Unable to execute target application&quot;)</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="TRIMMING"><a href="#TRIMMING" class="headerlink" title="TRIMMING"></a>TRIMMING</h4><ul>
+<li>如果不处于<code>dumb_mode</code>且<code>queue_cur-&gt;trim_done</code>为0<ul>
+<li>调用<code>trim_case(argv, queue_cur, in_buf)</code>返回给<code>res</code>。</li>
+<li><code>queue_cur-&gt;trim_done</code>置为1。</li>
+<li>修正<code>len</code>赋值为<code>queue_cur-&gt;len</code>。</li>
+<li>将<code>in_buf</code>内容拷贝给<code>out_buf</code>。</li>
+</ul>
+</li>
+</ul>
+<h4 id="PERFORMANCE-SCORE"><a href="#PERFORMANCE-SCORE" class="headerlink" title="PERFORMANCE SCORE"></a>PERFORMANCE SCORE</h4><ul>
+<li>调用<code>calculate_score(queue_cur)</code>结果返回给<code>perf_score</code>和<code>orig_pref</code>。</li>
+<li>如果<code>skip_deterministic</code>不为0或者<code>queue_cur</code>被fuzz过或者<code>queue_cur-&gt;passed_det</code>不为0，就跳转到<code>havoc_stage</code>。</li>
+<li>如果<code>master_max</code>不为0并且<code>queue_cur-&gt;exec_cksum % master_max</code>不等于<code>master_id</code>，则跳转到<code>havoc_stage</code>。</li>
+<li><code>doing_det</code>置为1。</li>
+</ul>
+<h4 id="SIMPLE-BITFLIP-dictionary-construction"><a href="#SIMPLE-BITFLIP-dictionary-construction" class="headerlink" title="SIMPLE BITFLIP (+dictionary construction)"></a>SIMPLE BITFLIP (+dictionary construction)</h4><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> FLIP_BIT(_ar, _b)                   \</span></span><br><span class="line"><span class="meta">  do                                        \</span></span><br><span class="line"><span class="meta">  &#123;                                         \</span></span><br><span class="line"><span class="meta">    u8 *_arf = (u8 *)(_ar);                 \</span></span><br><span class="line"><span class="meta">    u32 _bf = (_b);                         \</span></span><br><span class="line"><span class="meta">    _arf[(_bf) &gt;&gt; 3] ^= (128 &gt;&gt; ((_bf)&amp;7)); \</span></span><br><span class="line"><span class="meta">  &#125; while (0)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>stage_short</code>赋值为<code>flip1</code>，<code>stage_max</code>赋值为<code>len &lt;&lt; 3</code>，<code>stage_name</code>赋值为<code>bitflip 1/1</code>。</li>
+<li><code>orig_hit_cnt</code>赋值为<code>queued_paths + unique_crashes</code>。</li>
+<li><code>prev_cksum</code>赋值为<code>queue_cur-&gt;exec_cksum</code>。</li>
+<li>for循环<code>stage_cur = 0; stage_cur &lt; stage_max; stage_cur++</code><ul>
+<li>总共次数为<code>len &lt;&lt; 3</code>，其实就是每次循环对某个字节的某个<code>bit</code>都进行翻转，循环结束刚好对每个字节的每个<code>bit</code>进行翻转。</li>
+<li><code>stage_cur_byte</code>赋值为<code>stage_cur &gt;&gt; 3</code>，即当前翻转的字节索引值。</li>
+<li><code>FLIP_BIT(out_buf, stage_cur)</code>，进行<code>bit</code>翻转。</li>
+<li>调用<code>common_fuzz_stuff(argv, out_buf, len)</code>，如果返回值不为0，则跳转到<code>abandon_entry</code>。</li>
+<li><code>FLIP_BIT(out_buf, stage_cur)</code>，再翻转回来。</li>
+<li>如果不处于<code>dumb_mode</code>并且<code>(stage_cur &amp; 7) == 7</code>，即刚好完成一个字节的翻转<ul>
+<li>调用<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>将结果赋值给<code>cksum</code></li>
+<li>如果<code>stage_cur</code>等于<code>stage_max - 1</code>且<code>cksum</code>等于<code>prev_cksum</code><ul>
+<li>如果<code>a_len</code>小于<code>MAX_AUTO_EXTRA</code>，则<code>a_collect[a_len]</code>赋值为<code>out_buf[stage_cur &gt;&gt; 3]</code>。</li>
+<li><code>a_len++</code></li>
+<li>如果<code>a_len</code>在<code>MIN_AUTO_EXTRA</code>和<code>MAX_AUTO_EXTRA</code>之间，就调用<code>maybe_add_auto(a_collect, a_len)</code>。</li>
+</ul>
+</li>
+<li>否则，如果<code>cksum</code>不等于<code>prev_cksum</code><ul>
+<li>如果<code>a_len</code>大于等于<code>MIN_AUTO_EXTRA</code>且小于等于<code>MAX_AUTO_EXTRA</code>，则调用<code>maybe_add_auto(a_collect, a_len);</code></li>
+<li><code>a_len</code> 置为0。</li>
+<li><code>prev_cksum</code>赋值为<code>cksum</code>。</li>
+</ul>
+</li>
+<li>如果<code>cksum</code>不等于<code>queue_cur-&gt;exec_cksum</code></li>
+<li>如果<code>a_len</code>小于<code>MAX_AUTO_EXTRA</code><ul>
+<li><code>a_collect[a_len]</code>赋值为<code>out_buf[stage_cur &gt;&gt; 3]</code>。</li>
+</ul>
+</li>
+<li><code>a_len++</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>new_hit_cnt</code>赋值为<code>queued_paths + unique_crashes</code>。</li>
+<li><code>stage_finds[STAGE_FLIP1]</code>加上<code>new_hit_cnt - orig_hit_cnt</code>，即新发现的路径或者crash。</li>
+<li><code>stage_cycles[STAGE_FLIP1]</code>加上<code>stage_max</code>。</li>
+<li>设置<code>stage_name</code>为<code>bitflip 2/1</code>，和上述过程同理，但是现在一次循环翻转2个<code>bit</code>，步长为1个<code>bit</code>。</li>
+<li>同理<code>bitflip 4/1</code>。</li>
+<li>生成 effector map</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_APOS(_p) ((_p) &gt;&gt; EFF_MAP_SCALE2)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_REM(_x) ((_x) &amp; ((1 &lt;&lt; EFF_MAP_SCALE2) - 1))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_ALEN(_l) (EFF_APOS(_l) + !!EFF_REM(_l))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EFF_SPAN_ALEN(_p, _l) (EFF_APOS((_p) + (_l)-1) - EFF_APOS(_p) + 1)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>申请<code>EFF_ALEN(len)</code>大小的内存，将地址赋值给<code>eff_map</code>，<code>eff_map</code>也是压缩存储的<code>bitmap</code>，总是标记第一字节和最后一字节的值为1。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">eff_map[<span class="number">0</span>] = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">EFF_APOS</span>(len - <span class="number">1</span>) != <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">  eff_map[<span class="built_in">EFF_APOS</span>(len - <span class="number">1</span>)] = <span class="number">1</span>;</span><br><span class="line">  eff_cnt++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>bitflip 8/8</code>阶段，通过每个字节异或<code>0xFF</code>进行翻转，调用<code>common_fuzz_stuff(argv, out_buf, len)</code>。</p>
+<ul>
+<li>如果<code>eff_map[EFF_APOS(stage_cur)]</code>为0<ul>
+<li>如果不处于<code>dumb_mode</code>或者<code>len</code>大于等于<code>EFF_MIN_LEN</code><ul>
+<li><code>cksum</code>通过<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>计算，否则，直接按照<code>~queue_cur-&gt;exec_cksum</code>计算。</li>
+<li>如果<code>cksum</code>不等于<code>queue_cur-&gt;exec_cksum</code>，则将<code>eff_map[EFF_APOS(stage_cur)]</code>置为1，并<code>eff_cnt++</code>，即当case的长度够长时，才会通过翻转字节后会不会改变覆盖的路径，来判断需不需标记这个字节是<code>meatdata</code>，将这个字节对应的位置的<code>eff_map</code>标记为1。也就是这个字节是关键字时，翻转它才会改变路径，否则它是<code>plain data</code>的话，翻转它不会造成路径变化。在后续的<code>bitflip</code>中，会跳过<code>eff_map</code>对应位置为0的字节。但是当case的长度太短了，则会直接标记为1。</li>
+<li>再异或<code>0xFF</code>翻转回来。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>如果<code>eff_cnt</code>不等于<code>EFF_ALEN(len)</code>并且<code>eff_cnt * 100 / EFF_ALEN(len)</code>大于<code>EFF_MAX_PERC</code></p>
+<ul>
+<li>则直接把<code>eff_map</code>所有字节标记为1，即认为所有字节都是有必要进行之后的<code>fuzz</code>。<code>block_eff_select</code>加上<code>EFF_ALEN(len)</code>。</li>
+</ul>
+</li>
+<li><p>否则<code>block_eff_select</code>加上<code>eff_cnt</code>。</p>
+</li>
+<li><p><code>block_eff_total</code>加上<code>EFF_ALEN(len)</code>。</p>
+</li>
+<li><p><code>bitflip 16/8</code>同理，但是<code>eff_map[EFF_APOS(i)]</code>和<code>eff_map[EFF_APOS(i + 1)]</code>都为0，就会<code>stage_max--</code>并跳过此次字节翻转。</p>
+</li>
+<li><p><code>bitfilp 32/8</code>同理，但是是四个字节对应的<code>eff_map</code>值都为0，跳过此次字节翻转。</p>
+</li>
+</ul>
+<h4 id="ARITHMETIC-INC-DEC"><a href="#ARITHMETIC-INC-DEC" class="headerlink" title="ARITHMETIC INC&#x2F;DEC"></a>ARITHMETIC INC&#x2F;DEC</h4><ul>
+<li><code>arith 8/8</code>、<code>arith 16/8</code>、<code>arith 32/8</code>总过这三个小阶段，和<code>bitflip</code>原理类似，只不过变成加上或减去值，由于<code>ARITH_MAX</code>的值是35，所以变化的范围是<code>[-35, 35]</code>，同时也会考虑大小端序。</li>
+<li>通过<code>eff_map</code>和加上或减去某些值判断是不是和<code>bitflip</code>一样，来跳过某些<code>mutate</code>。</li>
+</ul>
+<h4 id="INTERESTING-VALUES"><a href="#INTERESTING-VALUES" class="headerlink" title="INTERESTING VALUES"></a>INTERESTING VALUES</h4><ul>
+<li><code>interest 8/8</code>、<code>interest 16/8</code>、<code>interest 32/8</code>，对对应长度的值替换成<code>interesting value</code>。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> INTERESTING_8 \</span></span><br><span class="line"><span class="meta">  -128,          <span class="comment">/* Overflow signed 8-bit when decremented  */</span> \</span></span><br><span class="line"><span class="meta">  -1,            <span class="comment">/*                                         */</span> \</span></span><br><span class="line"><span class="meta">   0,            <span class="comment">/*                                         */</span> \</span></span><br><span class="line"><span class="meta">   1,            <span class="comment">/*                                         */</span> \</span></span><br><span class="line"><span class="meta">   16,           <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   32,           <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   64,           <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   100,          <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   127           <span class="comment">/* Overflow signed 8-bit when incremented  */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INTERESTING_16 \</span></span><br><span class="line"><span class="meta">  -32768,        <span class="comment">/* Overflow signed 16-bit when decremented */</span> \</span></span><br><span class="line"><span class="meta">  -129,          <span class="comment">/* Overflow signed 8-bit                   */</span> \</span></span><br><span class="line"><span class="meta">   128,          <span class="comment">/* Overflow signed 8-bit                   */</span> \</span></span><br><span class="line"><span class="meta">   255,          <span class="comment">/* Overflow unsig 8-bit when incremented   */</span> \</span></span><br><span class="line"><span class="meta">   256,          <span class="comment">/* Overflow unsig 8-bit                    */</span> \</span></span><br><span class="line"><span class="meta">   512,          <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   1000,         <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   1024,         <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   4096,         <span class="comment">/* One-off with common buffer size         */</span> \</span></span><br><span class="line"><span class="meta">   32767         <span class="comment">/* Overflow signed 16-bit when incremented */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INTERESTING_32 \</span></span><br><span class="line"><span class="meta">  -2147483648LL, <span class="comment">/* Overflow signed 32-bit when decremented */</span> \</span></span><br><span class="line"><span class="meta">  -100663046,    <span class="comment">/* Large negative number (endian-agnostic) */</span> \</span></span><br><span class="line"><span class="meta">  -32769,        <span class="comment">/* Overflow signed 16-bit                  */</span> \</span></span><br><span class="line"><span class="meta">   32768,        <span class="comment">/* Overflow signed 16-bit                  */</span> \</span></span><br><span class="line"><span class="meta">   65535,        <span class="comment">/* Overflow unsig 16-bit when incremented  */</span> \</span></span><br><span class="line"><span class="meta">   65536,        <span class="comment">/* Overflow unsig 16 bit                   */</span> \</span></span><br><span class="line"><span class="meta">   100663045,    <span class="comment">/* Large positive number (endian-agnostic) */</span> \</span></span><br><span class="line"><span class="meta">   2147483647    <span class="comment">/* Overflow signed 32-bit when incremented */</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="DICTIONARY-STUFF"><a href="#DICTIONARY-STUFF" class="headerlink" title="DICTIONARY STUFF"></a>DICTIONARY STUFF</h4><ul>
+<li><p><code>user extras (over)</code>：在对应的偏移处覆盖成<code>extras</code>。</p>
+<ul>
+<li>如果<code>extras_cnt &gt; MAX_DET_EXTRAS</code>并且<code>UR(extras_cnt) &gt;= MAX_DET_EXTRAS</code>并且剩下的长度小于<code>extras[j].len</code>或者原来的值和要插入的<code>extras</code>一样或者<code>eff_map</code>对应位置值为0，跳过此次<code>mutate</code>。</li>
+</ul>
+</li>
+<li><p><code>user extras (insert)</code>：在对应偏移处插入<code>extras</code>。</p>
+</li>
+<li><p><code>auto extras (over)</code>：和第一小阶段类似，但是使用的是自动生成的<code>extras</code>。</p>
+</li>
+<li><p>此时完成了所有的<code>deterministic mutate</code>，如果<code>queue_cur-&gt;passed_det</code>为空，则调用<code>mark_as_det_done(queue_cur)</code>标记。</p>
+</li>
+</ul>
+<h4 id="RANDOM-HAVOC"><a href="#RANDOM-HAVOC" class="headerlink" title="RANDOM HAVOC"></a>RANDOM HAVOC</h4><ul>
+<li>总的来说，就是在随机次数下采取随机种<code>mutate</code>组合，并且<code>mutate</code>的执行也会是随机的。如果在这个阶段发现了新路径，执行次数也会增加。</li>
+</ul>
+<h4 id="SPLICING"><a href="#SPLICING" class="headerlink" title="SPLICING"></a>SPLICING</h4><ul>
+<li>只有在遍历整个<code>queue</code>都没有新发现的情况下才会启用<code>splicing</code>。</li>
+<li>随机选取一个<code>queue_entry</code>，寻找合适的位置和当前case拼接，然后跳转到<code>havoc stage</code>。</li>
+</ul>
+<hr>
+<h3 id="trim-case"><a href="#trim-case" class="headerlink" title="trim_case"></a>trim_case</h3><ul>
+<li>如果<code>q-&gt;len</code>小于5，则直接返回 0。</li>
+<li><code>bytes_trim_in</code>加上<code>q-&gt;len</code>。</li>
+<li><code>len_p2</code>赋值为<code>next_p2(q-&gt;len)</code>，也就是赋值为第一个大于等于<code>len</code>的2的幂数。</li>
+<li><code>remove_len</code>赋值为<code>MAX(len_p2 / TRIM_START_STEPS, TRIM_MIN_BYTES)</code>。</li>
+<li><code>while(remove_len &gt;= MAX(len_p2 / TRIM_END_STEPS, TRIM_MIN_BYTES))</code><ul>
+<li><code>remove_pos</code>赋值为<code>remove_len</code>。</li>
+<li><code>stage_cur</code>置为0，<code>stage_max</code>赋值为<code>q-&gt;len / remove_len</code>。</li>
+<li><code>while(remove_pos &lt; q-&gt;len)</code><ul>
+<li><code>trim_avail</code>赋值为<code>MIN(remove_len, q-&gt;len - remove_pos)</code>。</li>
+<li>调用<code>write_with_gap(in_buf, q-&gt;len, remove_pos, trim_avail)</code>将<code>out_file</code>从<code>remove_pos</code>处剪掉<code>trim_avail</code>的长度。</li>
+<li>调用<code>run_target(argv, exec_tmout)</code>，将结果赋值给<code>fault</code>。</li>
+<li><code>trim_execs++</code>。</li>
+<li>如果<code>stop_soon</code>不为0或者<code>fault</code>等于<code>FAULT_ERROR</code>。跳转到<code>abort_trimming</code>。</li>
+<li><code>cksum</code>赋值为<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>。</li>
+<li>如果<code>cksum</code>等于<code>q-&gt;exec_cksum</code>，即剪掉这部分对case没有影响<ul>
+<li><code>move_tail</code>赋值为<code>q-&gt;len - remove_pos - trim_avail</code>。</li>
+<li><code>q-&gt;len</code>减掉<code>trim_avail</code>。</li>
+<li><code>len_p2</code>赋值为<code>next_p2(q-&gt;len)</code>。</li>
+<li><code>memmove(in_buf + remove_pos, in_buf + remove_pos + trim_avail, move_tail);</code>，实现<code>trim</code></li>
+<li>如果<code>needs_write</code>为0<ul>
+<li><code>needs_write</code>置为1。</li>
+<li>将<code>trace_bits</code>拷贝到<code>clean_trace</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>否则，<code>remove_pos</code>加上<code>remove_len</code>。</li>
+<li><code>show_status()</code>，并且<code>stage_cur++</code>。</li>
+</ul>
+</li>
+<li><code>remove</code>右移一位。</li>
+</ul>
+</li>
+<li>如果<code>needs_write</code>不为0<ul>
+<li><code>unlink(q-&gt;fname)</code>，打开新的<code>q-&gt;fname</code>，将文件描述符赋值给<code>fd</code>。</li>
+<li>将<code>trimmed in_buf</code>写进<code>q-&gt;fname</code>。</li>
+<li>将<code>clean_trace</code>拷贝给<code>trace_bits</code>。</li>
+<li>调用<code>update_bitmap_score(q)</code>。</li>
+</ul>
+</li>
+<li><code>abort_trimming标签</code></li>
+<li><code>bytes_trim_out</code>加上<code>q-&gt;len</code>。</li>
+<li>返回<code>fault</code>。</li>
+</ul>
+<h3 id="sync-fuzzers"><a href="#sync-fuzzers" class="headerlink" title="sync_fuzzers"></a>sync_fuzzers</h3><p>读取其他fuzzer的<code>queue</code>，保存到自己的<code>queue</code></p>
+<ul>
+<li>通过<code>opendir(sync_dir)</code>打开<code>sync_dir</code>，将返回值给<code>sd</code>。</li>
+<li>while循环读取该目录下的文件<code>(sd_ent = readdir(sd))</code><ul>
+<li>跳过<code>.</code>开头的文件和自己的输出文件夹。</li>
+<li>通过<code>opendir(&quot;sync_dir/sd_ent-&gt;d_name/queue&quot;)</code>打开<code>queue</code>目录，将返回值给<code>qd</code>，跳过没有<code>queue</code>子目录的目录。</li>
+<li>打开<code>out_dir/.synced/sd_ent-&gt;d_name</code>将返回值给<code>id_fd</code>。</li>
+<li>从<code>id_fd</code>读取四个字节赋值给<code>min_accept</code>。<code>minaccept</code>赋值给<code>next_min_accept</code>。<code>min_accept</code>是上次最后一个读取的case的下一个case的<code>id</code>。</li>
+<li>while循环读取<code>queue</code>下的case<code>(qd_ent = readdir(qd))</code><ul>
+<li>跳过<code>.</code>目录和<code>id</code>比<code>min_accept</code>小的case，将读取的<code>id</code>赋值给<code>syncing_case</code>。</li>
+<li>如果<code>syncing_case</code>大于等于<code>next_min_accept</code>，则<code>next_min_accept</code>等于<code>syncing_case + 1</code>。</li>
+<li>打开<code>dq_path/qd_ent-&gt;d_name</code>，即打开这个case，将返回值给<code>fd</code>。</li>
+<li>通过<code>fd</code>将内容映射到<code>mem</code>。</li>
+<li>通过<code>write_to_testcase(mem, st.st_size)</code>，将case的内容写入到<code>out_file</code>。</li>
+<li><code>run_target(argv, exec_tmout)</code>将返回值赋给<code>fault</code>。</li>
+<li><code>queued_imported</code>加上<code>save_if_interesting(argv, mem, st.st_size, fault)</code>。</li>
+</ul>
+</li>
+<li>通过<code>id_fd</code>写入<code>next_min_accept</code>。</li>
+</ul>
+</li>
+</ul>
+<h3 id="common-fuzz-stuff"><a href="#common-fuzz-stuff" class="headerlink" title="common_fuzz_stuff"></a>common_fuzz_stuff</h3><p>写入<code>mutated case</code>，<code>run_target()</code>执行，通过<code>save_if_interesting()</code>保存<code>interesting case</code>。</p>
+<ul>
+<li><code>write_to_case(out_buf, len)</code>，将<code>mutate</code>过的case写入<code>out_file</code>。</li>
+<li><code>run_target(out_buf, len)</code>，将返回值给<code>fault</code>。</li>
+<li>如果<code>fault</code>等于<code>FAULT_TMOUT</code><ul>
+<li>如果<code>subseq_tmouts++</code>大于<code>TMOUT_LIMIT</code><ul>
+<li><code>cur_skipped_paths++</code>。</li>
+<li>返回1。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>否则<code>subseq_tmouts</code>等于0。</li>
+<li><code>queued_discovered</code>加上<code>save_if_interesting(argv, out_buf, len, fault)</code>。</li>
+<li><code>show_stats()</code>。</li>
+<li>返回0。</li>
+</ul>
+<h3 id="save-if-interesting"><a href="#save-if-interesting" class="headerlink" title="save_if_interesting"></a>save_if_interesting</h3><ul>
+<li>如果<code>fault</code>等于<code>crash_mode</code><ul>
+<li>调用<code>has_new_bits(virgin_bits)</code>返回值给<code>hnb</code>，如果为0<ul>
+<li>如果<code>crash_mode</code>不为0<ul>
+<li><code>total_crashes++</code>。</li>
+<li>返回0。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>fn</code>赋值为<code>alloc_printf(&quot;%s/queue/id:%06u,%s&quot;, out_dir, queued_paths,describe_op(hnb));</code></li>
+<li><code>add_to_queue(fn, len, 0);</code>添加到<code>queue</code>。</li>
+<li>如果<code>hnb</code>等于2，即覆盖了新路径<ul>
+<li><code>queue_top-&gt;has_new_cov</code>赋值为1。</li>
+<li><code>queued_with_cov++</code>。</li>
+</ul>
+</li>
+<li><code>queue_top-&gt;exec_cksum</code>赋值为<code>hash32(trace_bits, MAP_SIZE, HASH_CONST)</code>。</li>
+<li>调用<code>calibrate_case(argv, queue_top, mem, queue_cycle - 1, 0)</code>，将结果给<code>res</code>。</li>
+<li>如果<code>res</code>等于<code>FAULT_ERROR</code>抛出异常退出。</li>
+<li>打开case<code>open(fn)</code>，将结果赋值给<code>fd</code>。</li>
+<li>通过<code>fd</code>写入<code>mem</code>，<code>ck_write(fd, mem, len, fn);</code>。</li>
+<li><code>keeping</code>赋值为1。</li>
+</ul>
+</li>
+<li><code>Switch(fault)</code><ul>
+<li><code>FAULT_TMOUT</code>:<ul>
+<li><code>total_tmouts++</code></li>
+<li>如果<code>unique_hangs</code>大于等于<code>KEEP_UNIQUE_HANG</code>，返回<code>keeping</code>。</li>
+<li>如果不处于<code>dumb_mode</code><ul>
+<li>调用<code>simplify_trace((u64 *)trace_bits)</code></li>
+<li>如果<code>has_new_bits(virgin_tmout)</code>为0，返回<code>keeping</code>。</li>
+</ul>
+</li>
+<li><code>unique_tmouts++</code>。</li>
+<li>如果<code>exec_tmout</code>小于<code>hang_tmout</code><ul>
+<li><code>write_to_testcase</code>写入到<code>out_file</code>。</li>
+<li>再次调用<code>run_target(argv, hang_tmout)</code>，将结果赋值给<code>new_fault</code>。</li>
+<li>如果<code>stop_soon</code>为0且<code>new_fault</code>等于<code>FAULT_CRASH</code>，跳转到<code>keep_as_crash</code>。</li>
+<li>如果<code>stop_soon</code>不为0或者<code>new_fault</code>不等于<code>FAULT_TMOUT</code>，返回<code>keeping</code>。</li>
+<li><code>fn</code>赋值为<code>alloc_printf(&quot;%s/hangs/id:%06llu,%s&quot;, out_dir,unique_hangs, describe_op(0));</code></li>
+<li><code>unique_hangs++</code>。</li>
+<li><code>last_hang_time</code>等于<code>get_cur_time</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>FAULT_CRASH(keep_as_crash标签)</code>：<ul>
+<li><code>total_crashes++</code></li>
+<li>如果<code>unique_crashes</code>大于等于<code>KEEP_UNIQUE_CRASH</code>，则直接返回<code>keeping</code>。</li>
+<li>如果不处于<code>dumb_mode</code><ul>
+<li><code>simplify_trace((u64 *)trace_bits)</code></li>
+<li>如果<code>has_new_bits(virgin_crash)</code>为0，则直接返回<code>keeping</code>。</li>
+<li><code>fn</code>赋值为<code>fn = alloc_printf(&quot;%s/crashes/id:%06llu,sig:%02u,%s&quot;, out_dir,unique_crashes, kill_signal, describe_op(0));</code></li>
+<li><code>unique_crashes++</code>。</li>
+<li><code>last_crash_time</code>赋值为<code>get_cur_time()</code>。</li>
+<li><code>last_crash_execs</code>赋值为<code>total_execs</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>FAULT_ERROR</code>:<ul>
+<li>抛出异常退出。</li>
+</ul>
+</li>
+<li><code>default</code>:<ul>
+<li>返回<code>keeping</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>open(fn)</code>，将<code>mem</code>写入。</li>
+<li>返回<code>keeping</code>。</li>
+</ul>
+<h3 id="simplify-trace"><a href="#simplify-trace" class="headerlink" title="simplify_trace"></a>simplify_trace</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> u8 simplify_lookup[<span class="number">256</span>] = &#123;</span><br><span class="line"></span><br><span class="line">  [<span class="number">0</span>]         = <span class="number">1</span>,</span><br><span class="line">  [<span class="number">1</span> ... <span class="number">255</span>] = <span class="number">128</span></span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>i</code>赋值为<code>MAP_SIZE &gt;&gt; 3</code>。</li>
+<li><code>while(i--)</code>，每8个字节遍历<ul>
+<li>如果<code>mem</code>不为0<ul>
+<li><code>u8 *mem8 = (u8 *)mem</code>，遍历每个字节，只要不为0，就会置为<code>128</code>，否则置为<code>1</code>。</li>
+</ul>
+</li>
+<li>否则，直接置为<code>0x0101010101010101ULL</code>，也就是字节值为1代表没有路径覆盖，值为128代表有。</li>
+</ul>
+</li>
+</ul>
+<h3 id="calculate-score"><a href="#calculate-score" class="headerlink" title="calculate_score"></a>calculate_score</h3><p>计算<code>perf_score</code>用来判断后续<code>havoc</code>持续的时间</p>
+<ul>
+<li><code>total_cal_us / total_cal_cycles</code>计算平均执行时间<code>avg_exec_us</code>。</li>
+<li><code>total_bitmap_size / total_bitmap_entries</code>计算平均<code>bitmap</code>大小<code>avg_bitmap_size</code>。</li>
+<li><code>handicap</code>值越大，说明这个case对应的新路径越难发现，越有<code>mutate</code>的价值</li>
+<li><code>depth</code>值越大，和<code>handicap</code>类似。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (q-&gt;exec_us * <span class="number">0.1</span> &gt; avg_exec_us)</span><br><span class="line">  perf_score = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;exec_us * <span class="number">0.25</span> &gt; avg_exec_us)</span><br><span class="line">  perf_score = <span class="number">25</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;exec_us * <span class="number">0.5</span> &gt; avg_exec_us)</span><br><span class="line">  perf_score = <span class="number">50</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;exec_us * <span class="number">0.75</span> &gt; avg_exec_us)</span><br><span class="line">  perf_score = <span class="number">75</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;exec_us * <span class="number">4</span> &lt; avg_exec_us)</span><br><span class="line">  perf_score = <span class="number">300</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;exec_us * <span class="number">3</span> &lt; avg_exec_us)</span><br><span class="line">  perf_score = <span class="number">200</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;exec_us * <span class="number">2</span> &lt; avg_exec_us)</span><br><span class="line">  perf_score = <span class="number">150</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (q-&gt;bitmap_size * <span class="number">0.3</span> &gt; avg_bitmap_size)</span><br><span class="line">  perf_score *= <span class="number">3</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;bitmap_size * <span class="number">0.5</span> &gt; avg_bitmap_size)</span><br><span class="line">  perf_score *= <span class="number">2</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;bitmap_size * <span class="number">0.75</span> &gt; avg_bitmap_size)</span><br><span class="line">  perf_score *= <span class="number">1.5</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;bitmap_size * <span class="number">3</span> &lt; avg_bitmap_size)</span><br><span class="line">  perf_score *= <span class="number">0.25</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;bitmap_size * <span class="number">2</span> &lt; avg_bitmap_size)</span><br><span class="line">  perf_score *= <span class="number">0.5</span>;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;bitmap_size * <span class="number">1.5</span> &lt; avg_bitmap_size)</span><br><span class="line">  perf_score *= <span class="number">0.75</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (q-&gt;handicap &gt;= <span class="number">4</span>)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">  perf_score *= <span class="number">4</span>;</span><br><span class="line">  q-&gt;handicap -= <span class="number">4</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (q-&gt;handicap)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">  perf_score *= <span class="number">2</span>;</span><br><span class="line">  q-&gt;handicap--;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">switch</span> (q-&gt;depth)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">case</span> <span class="number">0</span> ... <span class="number">3</span>:</span><br><span class="line">  <span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> <span class="number">4</span> ... <span class="number">7</span>:</span><br><span class="line">  perf_score *= <span class="number">2</span>;</span><br><span class="line">  <span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> <span class="number">8</span> ... <span class="number">13</span>:</span><br><span class="line">  perf_score *= <span class="number">3</span>;</span><br><span class="line">  <span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> <span class="number">14</span> ... <span class="number">25</span>:</span><br><span class="line">  perf_score *= <span class="number">4</span>;</span><br><span class="line">  <span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">  perf_score *= <span class="number">5</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="插桩代码"><a href="#插桩代码" class="headerlink" title="插桩代码"></a>插桩代码</h1><h2 id="关键变量"><a href="#关键变量" class="headerlink" title="关键变量"></a>关键变量</h2><ul>
+<li><code>__afl_area_ptr</code>：存储共享内存的地址。</li>
+<li><code>__afl_prev_loc</code>：上一个基本块的<code>id</code>，即上一次<code>R(MAP_SIZE)</code>生成的随机数。</li>
+<li><code>__afl_fork_pid</code>：<code>fork</code>进程的<code>pid</code>。</li>
+<li><code>__afl_temp</code>：存储临时变量。</li>
+</ul>
+<h2 id="afl-maybe-log"><a href="#afl-maybe-log" class="headerlink" title="__afl_maybe_log"></a>__afl_maybe_log</h2><p>如果<code>__afl_area_ptr</code>为0</p>
+<ul>
+<li>如果<code>__afl_setup_failure</code>不为0，则直接返回。</li>
+<li>如果<code>_afl_global_area_ptr</code>不为0，则直接<code>__afl_area_ptr</code>赋值为<code>__afl_global_area_ptr</code>。</li>
+<li>否则读取环境变量<code>__AFL_SHM_ID</code>，再通过<code>shmat</code>获取共享内存的地址，如果获取失败则<code>__afl_setup_failure++</code>，直接返回。</li>
+<li>将共享内存地址给<code>__afl_area_ptr</code>和<code>__afl_global_area_ptr</code>。</li>
+<li>向状态管道写入4个字节，表示<code>forkserver</code>启动成功。如果写入4个字节成功，进入while循环<ul>
+<li>从控制管道读取4个字节到<code>__afl_temp</code>，如果读取失败，则退出。</li>
+<li><code>fork</code>进程，如果为子进程则跳转到<code>__afl_fork_resume</code></li>
+<li>如果为父进程，则将子进程<code>pid</code>保存到<code>__afl_fork_pid</code>，再通过状态管道写入<code>__afl_fork_pid</code>。</li>
+<li><code>waitpid</code>等待子进程结束，将子进程结束状态保存到<code>__afl_temp</code>。</li>
+</ul>
+</li>
+<li><code>__afl_fork_resume</code>标签：</li>
+<li>关闭状态管道的写入和控制管道的读取</li>
+<li>如下代码为信息记录</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cur_location = &lt;COMPILE_TIME_RANDOM&gt;; </span><br><span class="line">shared_mem[cur_location ^ prev_location]++; </span><br><span class="line">prev_location = cur_location &gt;&gt; <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>完整代码</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">char</span> __fastcall _afl_maybe_log(__int64 a1, __int64 a2, __int64 a3, __int64 rnd)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">char</span> v4; <span class="comment">// of</span></span><br><span class="line">  <span class="type">char</span> v5; <span class="comment">// al</span></span><br><span class="line">  __int64 v6; <span class="comment">// rdx</span></span><br><span class="line">  __int64 v7; <span class="comment">// rcx</span></span><br><span class="line">  <span class="type">char</span> *v9; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">int</span> v10; <span class="comment">// eax</span></span><br><span class="line">  <span class="type">void</span> *shm; <span class="comment">// rax</span></span><br><span class="line">  <span class="type">int</span> v12; <span class="comment">// edi</span></span><br><span class="line">  __int64 pid; <span class="comment">// rax</span></span><br><span class="line">  __int64 v14; <span class="comment">// rax</span></span><br><span class="line">  __int64 v15; <span class="comment">// [rsp-10h] [rbp-180h]</span></span><br><span class="line">  <span class="type">char</span> v16; <span class="comment">// [rsp+10h] [rbp-160h]</span></span><br><span class="line">  __int64 v17; <span class="comment">// [rsp+18h] [rbp-158h]</span></span><br><span class="line"></span><br><span class="line">  v5 = v4;</span><br><span class="line">  v6 = _afl_area_ptr;</span><br><span class="line">  <span class="keyword">if</span> ( !_afl_area_ptr )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ( _afl_setup_failure )</span><br><span class="line">      <span class="keyword">return</span> v5 + <span class="number">127</span>;</span><br><span class="line">    v6 = _afl_global_area_ptr;</span><br><span class="line">    <span class="keyword">if</span> ( _afl_global_area_ptr )</span><br><span class="line">    &#123;</span><br><span class="line">      _afl_area_ptr = _afl_global_area_ptr;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      v16 = v4;</span><br><span class="line">      v17 = rnd;</span><br><span class="line">      v9 = <span class="built_in">getenv</span>(<span class="string">&quot;__AFL_SHM_ID&quot;</span>);</span><br><span class="line">      <span class="keyword">if</span> ( !v9 || (v10 = <span class="built_in">atoi</span>(v9), shm = <span class="built_in">shmat</span>(v10, <span class="number">0LL</span>, <span class="number">0</span>), shm == (<span class="type">void</span> *)<span class="number">-1LL</span>) )</span><br><span class="line">      &#123;</span><br><span class="line">        ++_afl_setup_failure;</span><br><span class="line">        v5 = v16;</span><br><span class="line">        <span class="keyword">return</span> v5 + <span class="number">127</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      _afl_area_ptr = (__int64)shm;</span><br><span class="line">      _afl_global_area_ptr = shm;</span><br><span class="line">      v15 = (__int64)shm;</span><br><span class="line">      <span class="keyword">if</span> ( <span class="built_in">write</span>(<span class="number">199</span>, &amp;_afl_temp, <span class="number">4uLL</span>) == <span class="number">4</span> )</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="keyword">while</span> ( <span class="number">1</span> )</span><br><span class="line">        &#123;</span><br><span class="line">          v12 = <span class="number">198</span>;</span><br><span class="line">          <span class="keyword">if</span> ( <span class="built_in">read</span>(<span class="number">198</span>, &amp;_afl_temp, <span class="number">4uLL</span>) != <span class="number">4</span> )</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">          <span class="built_in">LODWORD</span>(pid) = fork();</span><br><span class="line">          <span class="keyword">if</span> ( pid &lt; <span class="number">0</span> )</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">          <span class="keyword">if</span> ( !pid )</span><br><span class="line">            <span class="keyword">goto</span> __afl_fork_resume;</span><br><span class="line">          _afl_fork_pid = pid;</span><br><span class="line">          <span class="built_in">write</span>(<span class="number">199</span>, &amp;_afl_fork_pid, <span class="number">4uLL</span>);</span><br><span class="line">          v12 = _afl_fork_pid;</span><br><span class="line">          <span class="built_in">LODWORD</span>(v14) = <span class="built_in">waitpid</span>(_afl_fork_pid, &amp;_afl_temp, <span class="number">0</span>);</span><br><span class="line">          <span class="keyword">if</span> ( v14 &lt;= <span class="number">0</span> )</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">          <span class="built_in">write</span>(<span class="number">199</span>, &amp;_afl_temp, <span class="number">4uLL</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        _exit(v12);</span><br><span class="line">      &#125;</span><br><span class="line">__afl_fork_resume:</span><br><span class="line">      <span class="built_in">close</span>(<span class="number">198</span>);</span><br><span class="line">      <span class="built_in">close</span>(<span class="number">199</span>);</span><br><span class="line">      v6 = v15;</span><br><span class="line">      v5 = v16;</span><br><span class="line">      rnd = v17;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  v7 = _afl_prev_loc ^ rnd;</span><br><span class="line">  _afl_prev_loc ^= v7;</span><br><span class="line">  _afl_prev_loc = (<span class="type">unsigned</span> __int64)_afl_prev_loc &gt;&gt; <span class="number">1</span>;</span><br><span class="line">  ++*(_BYTE *)(v6 + v7);</span><br><span class="line">  <span class="keyword">return</span> v5 + <span class="number">127</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><p><a target="_blank" rel="noopener" href="https://eternalsakura13.com/2020/08/23/afl/">sakura</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/10/20/Machine-Learning/" rel="next" title="Machine Learning">
+                <i class="fa fa-chevron-left"></i> Machine Learning
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2024/01/22/new-read-write-primitive-in-glibc-2-38/" rel="prev" title="house_of_illusion -- new read/write primitive">
+                house_of_illusion -- new read/write primitive <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/kano.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/enllus1on" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                friends
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.woodwhale.cn/" title="woodwhale" target="_blank">woodwhale</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://niyah.cn/" title="niyah" target="_blank">niyah</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.fup1p1.cn/" title="fup1p1" target="_blank">fup1p1</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://xunflash.top/" title="xunflash" target="_blank">xunflash</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.xuxblog.top/" title="xux" target="_blank">xux</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.k0nashi.cn/" title="k0nashi" target="_blank">k0nashi</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://goodlunatic.github.io/" title="lunatic" target="_blank">lunatic</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.bmth666.cn/bmth_blog/" title="bmth" target="_blank">bmth</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.csdn.net/weixin_52118017?type=blog" title="uuyjp" target="_blank">uuyjp</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.bi0x.com/" title="Bi0x" target="_blank">Bi0x</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://124.221.19.214/" title="CHHHCHHOH" target="_blank">CHHHCHHOH</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://asal1n.github.io/" title="AsaL1n" target="_blank">AsaL1n</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.x1aoblog.top/" title="X1ao" target="_blank">X1ao</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://straw-233.github.io/" title="straw" target="_blank">straw</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-as"><span class="nav-number">1.</span> <span class="nav-text">afl-as</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#add-instrumentation"><span class="nav-number">1.1.</span> <span class="nav-text">add_instrumentation()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main"><span class="nav-number">1.2.</span> <span class="nav-text">main()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-clang-fast"><span class="nav-number">2.</span> <span class="nav-text">afl-clang-fast</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-pass"><span class="nav-number">2.1.</span> <span class="nav-text">afl-llvm-pass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-llvm-rt"><span class="nav-number">2.2.</span> <span class="nav-text">afl-llvm-rt</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deferred-instrumentation"><span class="nav-number">2.2.1.</span> <span class="nav-text">deferred instrumentation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#persistent-mode"><span class="nav-number">2.2.2.</span> <span class="nav-text">persistent mode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trace-pc-guard"><span class="nav-number">2.2.3.</span> <span class="nav-text">trace-pc-guard</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sanitizer-cov-trace-pc-guard-init"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">__sanitizer_cov_trace_pc_guard_init</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#afl-fuzz"><span class="nav-number">3.</span> <span class="nav-text">afl-fuzz</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#setup-shm"><span class="nav-number">3.1.</span> <span class="nav-text">setup_shm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#maybe-add-auto"><span class="nav-number">3.2.</span> <span class="nav-text">maybe_add_auto</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#perform-dry-run"><span class="nav-number">3.3.</span> <span class="nav-text">perform_dry_run</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calibrate-case"><span class="nav-number">3.4.</span> <span class="nav-text">calibrate_case</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#init-forkserver"><span class="nav-number">3.5.</span> <span class="nav-text">init_forkserver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#classify-counts"><span class="nav-number">3.6.</span> <span class="nav-text">classify_counts</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#update-bitmap-score"><span class="nav-number">3.7.</span> <span class="nav-text">update_bitmap_score</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#minimize-bits"><span class="nav-number">3.8.</span> <span class="nav-text">minimize_bits</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cull-queue"><span class="nav-number">3.9.</span> <span class="nav-text">cull_queue</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mark-as-redundant"><span class="nav-number">3.10.</span> <span class="nav-text">mark_as_redundant</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fuzz%E6%89%A7%E8%A1%8C"><span class="nav-number">3.11.</span> <span class="nav-text">fuzz执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%BE%AA%E7%8E%AF"><span class="nav-number">3.11.1.</span> <span class="nav-text">主循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fuzz-one"><span class="nav-number">3.11.2.</span> <span class="nav-text">fuzz_one</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CALIBRATION"><span class="nav-number">3.11.2.1.</span> <span class="nav-text">CALIBRATION</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TRIMMING"><span class="nav-number">3.11.2.2.</span> <span class="nav-text">TRIMMING</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#PERFORMANCE-SCORE"><span class="nav-number">3.11.2.3.</span> <span class="nav-text">PERFORMANCE SCORE</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SIMPLE-BITFLIP-dictionary-construction"><span class="nav-number">3.11.2.4.</span> <span class="nav-text">SIMPLE BITFLIP (+dictionary construction)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ARITHMETIC-INC-DEC"><span class="nav-number">3.11.2.5.</span> <span class="nav-text">ARITHMETIC INC&#x2F;DEC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#INTERESTING-VALUES"><span class="nav-number">3.11.2.6.</span> <span class="nav-text">INTERESTING VALUES</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DICTIONARY-STUFF"><span class="nav-number">3.11.2.7.</span> <span class="nav-text">DICTIONARY STUFF</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RANDOM-HAVOC"><span class="nav-number">3.11.2.8.</span> <span class="nav-text">RANDOM HAVOC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SPLICING"><span class="nav-number">3.11.2.9.</span> <span class="nav-text">SPLICING</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trim-case"><span class="nav-number">3.11.3.</span> <span class="nav-text">trim_case</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sync-fuzzers"><span class="nav-number">3.11.4.</span> <span class="nav-text">sync_fuzzers</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#common-fuzz-stuff"><span class="nav-number">3.11.5.</span> <span class="nav-text">common_fuzz_stuff</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#save-if-interesting"><span class="nav-number">3.11.6.</span> <span class="nav-text">save_if_interesting</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#simplify-trace"><span class="nav-number">3.11.7.</span> <span class="nav-text">simplify_trace</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#calculate-score"><span class="nav-number">3.11.8.</span> <span class="nav-text">calculate_score</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8F%92%E6%A1%A9%E4%BB%A3%E7%A0%81"><span class="nav-number">4.</span> <span class="nav-text">插桩代码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%8F%98%E9%87%8F"><span class="nav-number">4.1.</span> <span class="nav-text">关键变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#afl-maybe-log"><span class="nav-number">4.2.</span> <span class="nav-text">__afl_maybe_log</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">enllus1on</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">24.4k</span>
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a></div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

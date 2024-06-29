@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Structured Exception Handling(结构化异常处理)也就是**SEH，是 Microsoft 对 C 和 C++ 语言的一个扩展，用于适当地处理某些异常代码情况，包括软件异常和硬件异常。由于SEH是存储在栈帧内，当我们无法直接溢出控制eip&#x2F;rip，我们就可以尝试通过控制SEH来劫持程序。下文都基于32位程序的SEH**。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Deep into Windows SEH">
+<meta property="og:url" content="https://enllus1on.github.io/2024/03/29/Deep-into-Windows-SEH/index.html">
+<meta property="og:site_name" content="enllus1on&#39;s blog">
+<meta property="og:description" content="Structured Exception Handling(结构化异常处理)也就是**SEH，是 Microsoft 对 C 和 C++ 语言的一个扩展，用于适当地处理某些异常代码情况，包括软件异常和硬件异常。由于SEH是存储在栈帧内，当我们无法直接溢出控制eip&#x2F;rip，我们就可以尝试通过控制SEH来劫持程序。下文都基于32位程序的SEH**。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/Deep-into-Windows-SEH.assets/igor1_seh3_stack_layout.gif">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/Deep-into-Windows-SEH.assets/image-20240328200239243.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/Deep-into-Windows-SEH.assets/image-20240328200714687.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/Deep-into-Windows-SEH.assets/image-20240328202123634.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/Deep-into-Windows-SEH.assets/image-20240328202828166.png">
+<meta property="article:published_time" content="2024-03-29T05:40:58.000Z">
+<meta property="article:modified_time" content="2024-03-29T05:53:14.000Z">
+<meta property="article:author" content="enllus1on">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://enllus1on.github.io/issue_images/Deep-into-Windows-SEH.assets/igor1_seh3_stack_layout.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://enllus1on.github.io/2024/03/29/Deep-into-Windows-SEH/"/>
+
+
+
+
+
+  <title>Deep into Windows SEH | enllus1on's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">enllus1on's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://enllus1on.github.io/2024/03/29/Deep-into-Windows-SEH/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/kano.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="enllus1on's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Deep into Windows SEH</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-03-29T13:40:58+08:00">
+                2024-03-29
+              </time>
+            
+
+            
+              <span class="post-meta-divider">|</span>
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-check-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Post modified&#58;</span>
+              
+              <time title="Post modified" itemprop="dateModified" datetime="2024-03-29T13:53:14+08:00">
+                2024-03-29
+              </time>
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index">
+                    <span itemprop="name">Windows</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Words count in article&#58;</span>
+                
+                <span title="Words count in article">
+                  1.4k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time &asymp;</span>
+                
+                <span title="Reading time">
+                  7
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong><code>Structured Exception Handling</code></strong>(结构化异常处理)也就是**<code>SEH</code><strong>，是 Microsoft 对 C 和 C++ 语言的一个扩展，用于适当地处理某些异常代码情况，包括软件异常和硬件异常。由于<code>SEH</code>是存储在栈帧内，当我们无法直接溢出控制<code>eip/rip</code>，我们就可以尝试通过控制<code>SEH</code>来劫持程序。下文都基于32位程序的</strong><code>SEH</code>**。</p>
+<span id="more"></span>
+
+<p><strong>SEH Stack Layout</strong></p>
+<p><img src="/../issue_images/Deep-into-Windows-SEH.assets/igor1_seh3_stack_layout.gif" alt="img"></p>
+<p>存储在栈上的结构体是<code>_EH3_EXCEPTION_REGISTRATION</code>。</p>
+<h2 id="EH3-EXCEPTION-REGISTRATION"><a href="#EH3-EXCEPTION-REGISTRATION" class="headerlink" title="_EH3_EXCEPTION_REGISTRATION"></a><strong><code>_EH3_EXCEPTION_REGISTRATION</code></strong></h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">_EH3_EXCEPTION_REGISTRATION</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">_EH3_EXCEPTION_REGISTRATION</span> *Next;</span><br><span class="line">  PVOID ExceptionHandler;</span><br><span class="line">  PSCOPETABLE_ENTRY ScopeTable;</span><br><span class="line">  DWORD TryLevel;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>我们通过汇编来观察程序是如何加载这个结构体到栈上的。</p>
+<p>程序源码</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> _CRT_SECURE_NO_WARNINGS</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;Windows.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> buf[<span class="number">0x100</span>] = &#123; <span class="string">&#x27;\x00&#x27;</span> &#125;;</span><br><span class="line">	__try &#123;</span><br><span class="line">		<span class="type">int</span> num = <span class="number">0</span>;</span><br><span class="line">		<span class="built_in">scanf</span>(<span class="string">&quot;%s&quot;</span>, buf);</span><br><span class="line">		<span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, &amp;num);</span><br><span class="line">		<span class="type">int</span> c = <span class="number">5</span> / num;</span><br><span class="line">	&#125;</span><br><span class="line">	__except (EXCEPTION_EXECUTE_HANDLER) &#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;exception trigger&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/../issue_images/Deep-into-Windows-SEH.assets/image-20240328200239243.png" alt="image-20240328200239243"></p>
+<p>由于栈是从地址高处往低处增长，所以是倒着放入对应的成员变量。</p>
+<h2 id="ScopeTable"><a href="#ScopeTable" class="headerlink" title="ScopeTable"></a><strong><code>ScopeTable</code></strong></h2><p><img src="/../issue_images/Deep-into-Windows-SEH.assets/image-20240328200714687.png" alt="image-20240328200714687"></p>
+<p>对应的结构体为**<code>_EH4_SCOPETABLE</code>**，也说明了<code>PSCOPETABLE_ENTRY</code>是<code>_EH4_SCOPETABLE</code>的指针。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">_EH4_SCOPETABLE</span></span><br><span class="line">&#123;</span><br><span class="line">  DWORD GSCookieOffset;</span><br><span class="line">  DWORD GSCookieXOROffset;</span><br><span class="line">  DWORD EHCookieOffset;</span><br><span class="line">  DWORD EHCookieXOROffset;</span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">_EH4_SCOPETABLE_RECORD</span> ScopeRecord[<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="EH4-SCOPETABLE-RECORD"><a href="#EH4-SCOPETABLE-RECORD" class="headerlink" title="_EH4_SCOPETABLE_RECORD"></a><strong><code>_EH4_SCOPETABLE_RECORD</code></strong></h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">_EH4_SCOPETABLE_RECORD</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">int</span> EnclosingLevel;</span><br><span class="line">  <span class="type">void</span> *FilterFunc;</span><br><span class="line">  <span class="type">void</span> *HandlerFunc;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><code>_EH4_SCOPETABLE_RECORD</code>中的<code>FilterFunc</code>对应着<code>__except(...)</code>里小括号的代码，并且<code>FilterFunc</code>的返回值必须为如下的值，是<code>windows</code>用来判断是否要执行<code>__except(...) &#123;...&#125;</code>大括号里的代码，也就是<code>HandlerFunc</code>、还是已经处理完异常选择继续执行发生异常后的代码、还是这个<code>SEH</code>无法处理传递到下一个<code>SEH</code>来处理</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Defined values for the exception filter expression</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXCEPTION_EXECUTE_HANDLER      1</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXCEPTION_CONTINUE_SEARCH      0</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXCEPTION_CONTINUE_EXECUTION (-1)</span></span><br></pre></td></tr></table></figure>
+
+<p>对应的<code>FilterFunc</code>和<code>HandlerFunc</code></p>
+<p><img src="/../issue_images/Deep-into-Windows-SEH.assets/image-20240328202123634.png" alt="image-20240328202123634"></p>
+<h2 id="ExceptionHandler"><a href="#ExceptionHandler" class="headerlink" title="ExceptionHandler"></a><strong><code>ExceptionHandler</code></strong></h2><p><img src="/../issue_images/Deep-into-Windows-SEH.assets/image-20240328202828166.png" alt="image-20240328202828166"></p>
+<h3 id="EXCEPTION-RECORD"><a href="#EXCEPTION-RECORD" class="headerlink" title="_EXCEPTION_RECORD"></a><strong><code>_EXCEPTION_RECORD</code></strong></h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">_EXCEPTION_RECORD</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> ExceptionCode;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> ExceptionFlags;</span><br><span class="line">  _EXCEPTION_RECORD *ExceptionRecord;</span><br><span class="line">  <span class="type">void</span> *ExceptionAddress;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> NumberParameters;</span><br><span class="line">  <span class="type">unsigned</span> <span class="type">int</span> ExceptionInformation[<span class="number">15</span>];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="EXCEPTION-REGISTRATION-RECORD"><a href="#EXCEPTION-REGISTRATION-RECORD" class="headerlink" title="_EXCEPTION_REGISTRATION_RECORD"></a><strong><code>_EXCEPTION_REGISTRATION_RECORD</code></strong></h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">_EXCEPTION_REGISTRATION_RECORD</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">_EXCEPTION_REGISTRATION_RECORD</span>* Next;                            <span class="comment">//0x0</span></span><br><span class="line">    <span class="keyword">enum</span> <span class="title class_">_EXCEPTION_DISPOSITION</span> (*Handler)(<span class="keyword">struct</span> _EXCEPTION_RECORD* arg1, VOID* arg2, <span class="keyword">struct</span> _CONTEXT* arg3, VOID* arg4); <span class="comment">//0x4</span></span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
+
+<p>细心点就会发现这个<code>_EXCEPTION_REGISTRATION_RECORD</code>就是<code>_EH3_EXCEPTION_REGISTRATION</code>的前两个成员变量。</p>
+<h3 id="except-handler4-common"><a href="#except-handler4-common" class="headerlink" title="_except_handler4_common"></a><strong><code>_except_handler4_common</code></strong></h3><p><code>_except_handler4_common</code>在<code>vcruntime140.dll</code>里，通过<code>msdn</code>的<code>pdb</code>和逆向还原，大致函数流程如下，无法保证正确性</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> __cdecl _except_handler4_common(</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> *CookiePointer,</span><br><span class="line">        <span class="built_in">void</span> (__fastcall *CookieCheckFunction)(<span class="type">unsigned</span> <span class="type">int</span>),</span><br><span class="line">        _EXCEPTION_RECORD *ExceptionRecord,</span><br><span class="line">        _EH3_EXCEPTION_REGISTRATION *EstablisherFrame,</span><br><span class="line">        _CONTEXT *ContextRecord)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">char</span> *FramePointer1; <span class="comment">// esi</span></span><br><span class="line">  DWORD TryLevel; <span class="comment">// edi</span></span><br><span class="line">  DWORD v7; <span class="comment">// eax</span></span><br><span class="line">  DWORD EnclosingLevel; <span class="comment">// ebx</span></span><br><span class="line">  _EH4_SCOPETABLE_RECORD *ScopeRecord1; <span class="comment">// eax</span></span><br><span class="line">  <span class="built_in">int</span> (*FilterFunc)(<span class="type">void</span>); <span class="comment">// ecx</span></span><br><span class="line">  <span class="type">int</span> v11; <span class="comment">// eax</span></span><br><span class="line">  <span class="type">char</span> v12; <span class="comment">// cl</span></span><br><span class="line">  _EXCEPTION_RECORD *v14; <span class="comment">// eax</span></span><br><span class="line">  _EH3_EXCEPTION_REGISTRATION *v15; <span class="comment">// eax</span></span><br><span class="line">  _EH4_SCOPETABLE *ScopeTable1; <span class="comment">// [esp-8h] [ebp-30h]</span></span><br><span class="line">  _EH4_SCOPETABLE *v17; <span class="comment">// [esp-8h] [ebp-30h]</span></span><br><span class="line">  _EXCEPTION_POINTERS ExceptionPointers; <span class="comment">// [esp+Ch] [ebp-1Ch] BYREF</span></span><br><span class="line">  _EH4_SCOPETABLE_RECORD *ScopeRecord2; <span class="comment">// [esp+14h] [ebp-14h]</span></span><br><span class="line">  <span class="type">void</span> *FramePointer2; <span class="comment">// [esp+18h] [ebp-10h]</span></span><br><span class="line">  <span class="type">int</span> v21; <span class="comment">// [esp+1Ch] [ebp-Ch]</span></span><br><span class="line">  _EH4_SCOPETABLE *ScopeTable2; <span class="comment">// [esp+20h] [ebp-8h]</span></span><br><span class="line">  <span class="type">char</span> v23; <span class="comment">// [esp+27h] [ebp-1h]</span></span><br><span class="line"></span><br><span class="line">  v23 = <span class="number">0</span>;</span><br><span class="line">  FramePointer1 = (<span class="type">char</span> *)&amp;EstablisherFrame[<span class="number">1</span>];</span><br><span class="line">  ScopeTable1 = (_EH4_SCOPETABLE *)(*CookiePointer ^ (<span class="type">unsigned</span> <span class="type">int</span>)EstablisherFrame-&gt;ScopeTable); <span class="comment">// decode ScopeTable</span></span><br><span class="line">  v21 = <span class="number">1</span>;</span><br><span class="line">  FramePointer2 = &amp;EstablisherFrame[<span class="number">1</span>];</span><br><span class="line">  ScopeTable2 = ScopeTable1;</span><br><span class="line">  <span class="built_in">ValidateLocalCookies</span>(CookieCheckFunction, ScopeTable1, (<span class="type">char</span> *)&amp;EstablisherFrame[<span class="number">1</span>]);</span><br><span class="line">  __except_validate_context_record(ContextRecord);</span><br><span class="line">  TryLevel = EstablisherFrame-&gt;TryLevel;</span><br><span class="line">  <span class="keyword">if</span> ( (ExceptionRecord-&gt;ExceptionFlags &amp; <span class="number">0x66</span>) != <span class="number">0</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ( TryLevel != <span class="number">-2</span> )</span><br><span class="line">    &#123;</span><br><span class="line">      _EH4_LocalUnwind(EstablisherFrame, <span class="number">-2u</span>, (<span class="type">int</span>)FramePointer1, CookiePointer);</span><br><span class="line">LABEL_14:</span><br><span class="line">      <span class="built_in">ValidateLocalCookies</span>(CookieCheckFunction, ScopeTable2, FramePointer1);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    ExceptionPointers.ExceptionRecord = ExceptionRecord;</span><br><span class="line">    ExceptionPointers.ContextRecord = ContextRecord;</span><br><span class="line">    EstablisherFrame[<span class="number">-1</span>].TryLevel = (DWORD)&amp;ExceptionPointers;<span class="comment">// update ExceptionPointers</span></span><br><span class="line">    <span class="keyword">if</span> ( TryLevel != <span class="number">-2</span> )</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">do</span></span><br><span class="line">      &#123;</span><br><span class="line">        v7 = TryLevel + <span class="number">2</span> * (TryLevel + <span class="number">2</span>);</span><br><span class="line">        EnclosingLevel = *(&amp;ScopeTable2-&gt;GSCookieOffset + v7);</span><br><span class="line">        ScopeRecord1 = (_EH4_SCOPETABLE_RECORD *)(&amp;ScopeTable2-&gt;GSCookieOffset + v7);</span><br><span class="line">        FilterFunc = (<span class="built_in">int</span> (*)(<span class="type">void</span>))ScopeRecord1-&gt;FilterFunc;</span><br><span class="line">        ScopeRecord2 = ScopeRecord1;</span><br><span class="line">        <span class="keyword">if</span> ( FilterFunc )</span><br><span class="line">        &#123;</span><br><span class="line">          v11 = _EH4_CallFilterFunc(FilterFunc);<span class="comment">// execute FilterFunc</span></span><br><span class="line">          v12 = <span class="number">1</span>;</span><br><span class="line">          v23 = <span class="number">1</span>;</span><br><span class="line">          <span class="keyword">if</span> ( v11 &lt; <span class="number">0</span> )                        <span class="comment">// EXCEPTION_CONTINUE_EXECUTION</span></span><br><span class="line">          &#123;</span><br><span class="line">            v21 = <span class="number">0</span>;</span><br><span class="line">            <span class="keyword">goto</span> LABEL_14;</span><br><span class="line">          &#125;</span><br><span class="line">          <span class="keyword">if</span> ( v11 &gt; <span class="number">0</span> )                        <span class="comment">// EXCEPTION_EXECUTE_HANDLER</span></span><br><span class="line">          &#123;</span><br><span class="line">            v14 = ExceptionRecord;</span><br><span class="line">            <span class="keyword">if</span> ( ExceptionRecord-&gt;ExceptionCode == <span class="number">0xE06D7363</span> &amp;&amp; _pDestructExceptionObject )</span><br><span class="line">            &#123;</span><br><span class="line">              <span class="keyword">if</span> ( _IsNonwritableInCurrentImage(&amp;_pDestructExceptionObject) )</span><br><span class="line">              &#123;</span><br><span class="line">                _pDestructExceptionObject(ExceptionRecord, <span class="number">1</span>);</span><br><span class="line">                FramePointer1 = (<span class="type">char</span> *)FramePointer2;</span><br><span class="line">              &#125;</span><br><span class="line">              v14 = ExceptionRecord;</span><br><span class="line">            &#125;</span><br><span class="line">            _EH4_GlobalUnwind2(EstablisherFrame, v14);</span><br><span class="line">            v15 = EstablisherFrame;</span><br><span class="line">            <span class="keyword">if</span> ( EstablisherFrame-&gt;TryLevel != TryLevel )</span><br><span class="line">            &#123;</span><br><span class="line">              _EH4_LocalUnwind(EstablisherFrame, TryLevel, (<span class="type">int</span>)FramePointer1, CookiePointer);</span><br><span class="line">              v15 = EstablisherFrame;</span><br><span class="line">            &#125;</span><br><span class="line">            v17 = ScopeTable2;</span><br><span class="line">            v15-&gt;TryLevel = EnclosingLevel;</span><br><span class="line">            <span class="built_in">ValidateLocalCookies</span>(CookieCheckFunction, v17, FramePointer1);</span><br><span class="line">            _EH4_TransferToHandler((<span class="built_in">int</span> (__fastcall *)(_DWORD, _DWORD))ScopeRecord2-&gt;HandlerFunc);<span class="comment">// execute HandlerFunc</span></span><br><span class="line">            <span class="built_in">JUMPOUT</span>(<span class="number">0x1000420A</span>);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">          v12 = v23;</span><br><span class="line">        &#125;</span><br><span class="line">        TryLevel = EnclosingLevel;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">while</span> ( EnclosingLevel != <span class="number">-2</span> );</span><br><span class="line">      <span class="keyword">if</span> ( !v12 )</span><br><span class="line">        <span class="keyword">return</span> v21;</span><br><span class="line">      <span class="keyword">goto</span> LABEL_14;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> v21;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>__exception_handler4_common</code>最终会执行<code>FilterFunc</code>和<code>HandlerFunc</code>，且没有验证这两个函数的合法性，所以我们可以通过伪造栈上的<code>_EH3_EXCEPTION_REGISTRATION</code>来实现任意函数执行。</p>
+<h2 id="异常处理流程"><a href="#异常处理流程" class="headerlink" title="异常处理流程"></a>异常处理流程</h2><p>异常都是通过<code>ntdll</code>里的<code>KiUserExceptionDispatcher</code>函数来进行异常调度。</p>
+<h3 id="KiUserExceptionDispatcher"><a href="#KiUserExceptionDispatcher" class="headerlink" title="KiUserExceptionDispatcher"></a><strong><code>KiUserExceptionDispatcher</code></strong></h3><p><code>KiUserExceptionDispatcher</code>调用<code>RtlDispatchException</code>来完成实际的调度。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">VOID NTAPI <span class="title">KiUserExceptionDispatcher</span> <span class="params">(EXCEPTION_RECORD *ExceptionRecord, CONTEXT *Context)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    NTSTATUS Status;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">RtlDispatchException</span>(ExceptionRecord, Context)) &#123;</span><br><span class="line">        <span class="comment">/* Exception is handled, you can continue the execution */</span></span><br><span class="line">        Status = <span class="built_in">NtContinue</span>(Context, FALSE);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">/* We are again raising an exception but, this time, without trying to find a handler */</span></span><br><span class="line">        Status = <span class="built_in">NtRaiseException</span>(ExceptionRecord, Context, FALSE);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="built_in">RtlRaiseException</span>(&amp;NestedException);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="RtlDispatchException"><a href="#RtlDispatchException" class="headerlink" title="RtlDispatchException"></a><strong><code>RtlDispatchException</code></strong></h3><p>开启<code>SEHOP</code>和<code>SafeSEH</code>会校验<code>ExceptionChain</code>和<code>ExceptionHandler</code>的合法性。</p>
+<p>校验完后，最终执行<code>ExceptionHandler</code>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">RtlDispatchException</span><span class="params">(...)</span> <span class="comment">// NT 6.3.9600</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/* Call the chain &#x27;Vectored Exception Handlers&#x27; */</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">RtlpCallVectoredHandlers</span>(exception, <span class="number">1</span>)) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    ExceptionRegistration = <span class="built_in">RtlpGetRegistrationHead</span>();</span><br><span class="line">    <span class="comment">/* ECV (SEHOP) */</span></span><br><span class="line">    <span class="keyword">if</span> (!DisableExceptionChainValidation &amp;&amp;</span><br><span class="line">        !<span class="built_in">RtlpIsValidExceptionChain</span>(ExceptionRegistration, ...)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (_RtlpProcessECVPolicy != <span class="number">2</span>)</span><br><span class="line">                <span class="keyword">goto</span> <span class="keyword">final</span>;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                <span class="built_in">RtlReportException</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* Go through the handler chain until you find the right handler */</span></span><br><span class="line">    <span class="keyword">while</span> (ExceptionRegistration != EXCEPTION_CHAIN_END) &#123;</span><br><span class="line">        <span class="comment">/* Check the stack limits */</span></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">STACK_LIMITS</span>(ExceptionRegistration)) &#123;</span><br><span class="line">            ExceptionRecord-&gt;ExceptionFlags |= EXCEPTION_STACK_INVALID;</span><br><span class="line">            <span class="keyword">goto</span> <span class="keyword">final</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* Validate the handler (SafeSEH)*/</span></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">RtlIsValidHandler</span>(ExceptionRegistration, ProcessFlags)) <span class="keyword">goto</span> <span class="keyword">final</span>;</span><br><span class="line">        <span class="comment">/* Hand over control to handler */</span></span><br><span class="line">        <span class="built_in">RtlpExecuteHandlerForException</span>(..., ExceptionRegistration-&gt;Handler);<span class="comment">// execute handler</span></span><br><span class="line">        ...</span><br><span class="line">        ExceptionRegistration = ExceptionRegistration-&gt;Next;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">final</span>:</span><br><span class="line">    <span class="comment">/* Call the chain &#x27;Vectored Continue Handlers&#x27; */</span></span><br><span class="line">    <span class="built_in">RtlpCallVectoredHandlers</span>(exception, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="RtlIsValidHandler"><a href="#RtlIsValidHandler" class="headerlink" title="RtlIsValidHandler"></a><strong><code>RtlIsValidHandler</code></strong></h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">BOOL <span class="title">RtlIsValidHandler</span><span class="params">(Handler)</span> <span class="comment">// NT 6.3.9600</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="comment">/* Handler within the image */</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (DllCharacteristics&amp;IMAGE_DLLCHARACTERISTICS_NO_SEH)</span><br><span class="line">            <span class="keyword">goto</span> InvalidHandler;</span><br><span class="line">        <span class="keyword">if</span> (<span class="comment">/* The image is .Net assembly, &#x27;ILonly&#x27; flag is enabled */</span>)</span><br><span class="line">            <span class="keyword">goto</span> InvalidHandler;</span><br><span class="line">        <span class="keyword">if</span> (<span class="comment">/* Found &#x27;SafeSEH&#x27; table */</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="comment">/* The image is registered in &#x27;LdrpInvertedFunctionTable&#x27; (or its cache), or the initialization of the process is not complete */</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="comment">/* Handler found in &#x27;SafeSEH&#x27; table */</span>)</span><br><span class="line">                    <span class="keyword">return</span> TRUE;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                    <span class="keyword">goto</span> InvalidHandler;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">return</span> TRUE;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="comment">/* &#x27;ExecuteDispatchEnable&#x27; and &#x27;ImageDispatchEnable&#x27; flags are enabled in &#x27;ExecuteOptions&#x27; of the process */</span>)</span><br><span class="line">            <span class="keyword">return</span> TRUE;</span><br><span class="line">        <span class="keyword">if</span> (<span class="comment">/* Handler is in non-executable area of the memory */</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (ExecuteDispatchEnable) <span class="keyword">return</span> TRUE;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (ImageDispatchEnable) <span class="keyword">return</span> TRUE;</span><br><span class="line">    &#125;</span><br><span class="line">    InvalidHandler:</span><br><span class="line">        <span class="built_in">RtlInvalidHandlerDetected</span>(...);</span><br><span class="line">        <span class="keyword">return</span> FALSE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="RtlpIsValidExceptionChain"><a href="#RtlpIsValidExceptionChain" class="headerlink" title="RtlpIsValidExceptionChain"></a><strong><code>RtlpIsValidExceptionChain</code></strong></h3><p>大致意思是<code>SEH</code>的地址要在栈上，<code>ExceptionHandler</code>不能在栈上，且最后一个<code>SEH</code>的<code>Handler</code>要为<code>RtlpFinalExceptionHandler</code>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">char</span> __fastcall <span class="title">RtlpIsValidExceptionChain</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">        _EXCEPTION_REGISTRATION_RECORD *a1,</span></span></span><br><span class="line"><span class="params"><span class="function">        DWORD StackLimit,</span></span></span><br><span class="line"><span class="params"><span class="function">        DWORD StackBase,</span></span></span><br><span class="line"><span class="params"><span class="function">        <span class="type">int</span> a4)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  DWORD StackBase_1; <span class="comment">// ebx</span></span><br><span class="line">  DWORD *StackLimit_1; <span class="comment">// eax</span></span><br><span class="line">  _EXCEPTION_DISPOSITION (__stdcall *Handler)(_EXCEPTION_RECORD *, <span class="type">void</span> *, _CONTEXT *, <span class="type">void</span> *); <span class="comment">// edx</span></span><br><span class="line"></span><br><span class="line">  StackBase_1 = StackBase;</span><br><span class="line">  StackLimit_1 = (DWORD *)StackLimit;</span><br><span class="line">  <span class="keyword">while</span> ( a1 != (_EXCEPTION_REGISTRATION_RECORD *)<span class="number">-1</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ( StackLimit_1 &gt; (DWORD *)a1 )</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> ( (<span class="type">unsigned</span> <span class="type">int</span>)a1 &gt;= StackBase_1 - <span class="number">8</span> )</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> ( ((<span class="type">unsigned</span> __int8)a1 &amp; <span class="number">3</span>) != <span class="number">0</span> )</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    Handler = a1-&gt;Handler;</span><br><span class="line">    <span class="keyword">if</span> ( (<span class="type">unsigned</span> <span class="type">int</span>)Handler &lt; StackBase_1 &amp;&amp; StackLimit &lt;= (<span class="type">unsigned</span> <span class="type">int</span>)Handler )</span><br><span class="line">      <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> ( a1-&gt;Next == (_EXCEPTION_REGISTRATION_RECORD *)<span class="number">-1</span> )</span><br><span class="line">    &#123;</span><br><span class="line">      StackBase_1 = StackBase;</span><br><span class="line">      <span class="keyword">if</span> ( (<span class="built_in">NtCurrentTeb</span>()-&gt;SameTebFlags &amp; <span class="number">0x200</span>) != <span class="number">0</span></span><br><span class="line">        &amp;&amp; Handler != (_EXCEPTION_DISPOSITION (__stdcall *)(_EXCEPTION_RECORD *, <span class="type">void</span> *, _CONTEXT *, <span class="type">void</span> *))RtlpFinalExceptionHandler )</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    StackLimit_1 = (DWORD *)&amp;a1[<span class="number">1</span>];</span><br><span class="line">    a1 = a1-&gt;Next;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://hackmag.com/uncategorized/exceptions-for-hardcore-users/">Dive into exceptions: caution, this may be hard</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.openrce.org/articles/full_view/21">Reversing Microsoft Visual C++ Part I: Exception Handling</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2024/01/22/new-read-write-primitive-in-glibc-2-38/" rel="next" title="house_of_illusion -- new read/write primitive">
+                <i class="fa fa-chevron-left"></i> house_of_illusion -- new read/write primitive
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/kano.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/enllus1on" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                friends
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.woodwhale.cn/" title="woodwhale" target="_blank">woodwhale</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://niyah.cn/" title="niyah" target="_blank">niyah</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.fup1p1.cn/" title="fup1p1" target="_blank">fup1p1</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://xunflash.top/" title="xunflash" target="_blank">xunflash</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.xuxblog.top/" title="xux" target="_blank">xux</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.k0nashi.cn/" title="k0nashi" target="_blank">k0nashi</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://goodlunatic.github.io/" title="lunatic" target="_blank">lunatic</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.bmth666.cn/bmth_blog/" title="bmth" target="_blank">bmth</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.csdn.net/weixin_52118017?type=blog" title="uuyjp" target="_blank">uuyjp</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.bi0x.com/" title="Bi0x" target="_blank">Bi0x</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://124.221.19.214/" title="CHHHCHHOH" target="_blank">CHHHCHHOH</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://asal1n.github.io/" title="AsaL1n" target="_blank">AsaL1n</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.x1aoblog.top/" title="X1ao" target="_blank">X1ao</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://straw-233.github.io/" title="straw" target="_blank">straw</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#EH3-EXCEPTION-REGISTRATION"><span class="nav-number">1.</span> <span class="nav-text">_EH3_EXCEPTION_REGISTRATION</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ScopeTable"><span class="nav-number">2.</span> <span class="nav-text">ScopeTable</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#EH4-SCOPETABLE-RECORD"><span class="nav-number">2.1.</span> <span class="nav-text">_EH4_SCOPETABLE_RECORD</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ExceptionHandler"><span class="nav-number">3.</span> <span class="nav-text">ExceptionHandler</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#EXCEPTION-RECORD"><span class="nav-number">3.1.</span> <span class="nav-text">_EXCEPTION_RECORD</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EXCEPTION-REGISTRATION-RECORD"><span class="nav-number">3.2.</span> <span class="nav-text">_EXCEPTION_REGISTRATION_RECORD</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#except-handler4-common"><span class="nav-number">3.3.</span> <span class="nav-text">_except_handler4_common</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">异常处理流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#KiUserExceptionDispatcher"><span class="nav-number">4.1.</span> <span class="nav-text">KiUserExceptionDispatcher</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RtlDispatchException"><span class="nav-number">4.2.</span> <span class="nav-text">RtlDispatchException</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RtlIsValidHandler"><span class="nav-number">4.3.</span> <span class="nav-text">RtlIsValidHandler</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RtlpIsValidExceptionChain"><span class="nav-number">4.4.</span> <span class="nav-text">RtlpIsValidExceptionChain</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">enllus1on</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">24.4k</span>
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a></div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

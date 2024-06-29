@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="初步理解c++的类以及常用STL的内部结构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++ internal">
+<meta property="og:url" content="https://enllus1on.github.io/2023/08/29/step-into-C++/index.html">
+<meta property="og:site_name" content="enllus1on&#39;s blog">
+<meta property="og:description" content="初步理解c++的类以及常用STL的内部结构">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_1.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++5.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_2.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_4.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_3.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_vector_1.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_vector_2.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_string_1.png">
+<meta property="og:image" content="https://enllus1on.github.io/issue_images/step_into_c++_deque_1.png">
+<meta property="article:published_time" content="2023-08-29T05:52:38.000Z">
+<meta property="article:modified_time" content="2023-09-01T06:51:08.000Z">
+<meta property="article:author" content="enllus1on">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://enllus1on.github.io/issue_images/step_into_c++_1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://enllus1on.github.io/2023/08/29/step-into-C++/"/>
+
+
+
+
+
+  <title>C++ internal | enllus1on's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">enllus1on's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://enllus1on.github.io/2023/08/29/step-into-C++/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/kano.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="enllus1on's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++ internal</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2023-08-29T13:52:38+08:00">
+                2023-08-29
+              </time>
+            
+
+            
+              <span class="post-meta-divider">|</span>
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-check-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Post modified&#58;</span>
+              
+              <time title="Post modified" itemprop="dateModified" datetime="2023-09-01T14:51:08+08:00">
+                2023-09-01
+              </time>
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index">
+                    <span itemprop="name">C++</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Words count in article&#58;</span>
+                
+                <span title="Words count in article">
+                  5.5k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time &asymp;</span>
+                
+                <span title="Reading time">
+                  28
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>初步理解c++的类以及常用STL的内部结构</p>
+<span id="more"></span>
+
+<h1 id="C-class"><a href="#C-class" class="headerlink" title="C++ class"></a>C++ class</h1><p>在平时的c语言课程中，我们几乎只用到了struct的成员变量，后来我们才知道<code>struct</code>其实和<code>class</code>差不多，也可以有自己的<code>成员函数</code>，<code>构造函数</code>，<code>析构函数</code>，可以<code>封装</code>，<code>多态</code>，<code>继承</code>，唯一的区别就是<code>struct</code>的访问控制默认是<code>public</code>，而<code>class</code>是<code>private</code>，现在我们来了解一下c++的<code>class</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> _CRT_SECURE_NO_WARNINGS</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">foo</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="built_in">foo</span>() &#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;foo default ctor\n&quot;</span>);</span><br><span class="line">		a = <span class="number">114</span>;</span><br><span class="line">		b = <span class="number">514</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">foo</span>(<span class="type">int</span> x, <span class="type">int</span> y) : <span class="built_in">a</span>(x), <span class="built_in">b</span>(y)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;foo ctor\n\n&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	~<span class="built_in">foo</span>() &#123; <span class="built_in">printf</span>(<span class="string">&quot;foo dtor\n\n&quot;</span>); &#125;;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">member</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;foo member function\n&quot;</span>);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;%d %d\n\n&quot;</span>, a, b);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">fun</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;fun_foo\n\n&quot;</span>); &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="type">int</span> a;</span><br><span class="line">	<span class="type">int</span> b;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">bar</span> : <span class="keyword">public</span> foo</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="built_in">bar</span>() &#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;bar ctor\n\n&quot;</span>);</span><br><span class="line">		x = <span class="number">1919</span>;</span><br><span class="line">		y = <span class="number">810</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	~<span class="built_in">bar</span>() &#123; <span class="built_in">printf</span>(<span class="string">&quot;bar dtor\n&quot;</span>); &#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">member</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;bar member function\n&quot;</span>);</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;%d %d\n\n&quot;</span>, x, y);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">fun</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;fun_bar\n\n&quot;</span>); &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="type">int</span> x;</span><br><span class="line">	<span class="type">int</span> y;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function">foo <span class="title">f0</span><span class="params">(<span class="number">114</span>, <span class="number">514</span>)</span></span>;</span><br><span class="line">	bar b0;</span><br><span class="line"></span><br><span class="line">	foo* foo_ptr = &amp;f0;</span><br><span class="line">	foo_ptr-&gt;<span class="built_in">member</span>();</span><br><span class="line"></span><br><span class="line">	foo* bar_ptr = &amp;b0;</span><br><span class="line">	bar_ptr-&gt;<span class="built_in">member</span>();</span><br><span class="line"></span><br><span class="line">	foo_ptr-&gt;<span class="built_in">fun</span>();</span><br><span class="line">	bar_ptr-&gt;<span class="built_in">fun</span>();</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>output</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">foo ctor</span><br><span class="line"></span><br><span class="line">foo default ctor</span><br><span class="line">bar ctor</span><br><span class="line"></span><br><span class="line">foo member function</span><br><span class="line">114 514</span><br><span class="line"></span><br><span class="line">foo member function</span><br><span class="line">114 514</span><br><span class="line"></span><br><span class="line">fun_foo</span><br><span class="line"></span><br><span class="line">fun_foo</span><br><span class="line"></span><br><span class="line">bar dtor</span><br><span class="line">foo dtor</span><br><span class="line"></span><br><span class="line">foo dtor</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="member-function-成员函数"><a href="#member-function-成员函数" class="headerlink" title="member function(成员函数)"></a>member function(成员函数)</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// foo:</span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">member</span><span class="params">()</span> </span>&#123; </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;foo member function\n&quot;</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%d %d\n&quot;</span>, a, b);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// bar:</span></span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">member</span><span class="params">()</span> </span>&#123; </span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;bar member function\n&quot;</span>);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%d %d\n&quot;</span>, x, y);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>顾名思义，就是<code>struct</code>或者<code>class</code>内部的成员，写在类内部的函数。根据访问控制tag不同，决定能否在外部调用，就像<code>foo</code> private下的变量是无法在外部函数通过<code>foo.a</code>来调用的</p>
+<h2 id="ctor-dtor-构造-析构"><a href="#ctor-dtor-构造-析构" class="headerlink" title="ctor &amp; dtor(构造 &amp; 析构)"></a>ctor &amp; dtor(构造 &amp; 析构)</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// foo:</span></span><br><span class="line">	<span class="built_in">foo</span>() &#123;&#125;</span><br><span class="line">	<span class="built_in">foo</span>(<span class="type">int</span> x, <span class="type">int</span> y) : <span class="built_in">a</span>(x), <span class="built_in">b</span>(y)</span><br><span class="line">		&#123; <span class="built_in">printf</span>(<span class="string">&quot;foo ctor\n&quot;</span>); &#125;</span><br><span class="line">	~<span class="built_in">foo</span>() &#123; <span class="built_in">printf</span>(<span class="string">&quot;foo dtor\n&quot;</span>); &#125;;</span><br><span class="line"><span class="comment">// bar:</span></span><br><span class="line">	<span class="built_in">bar</span>() &#123; </span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;bar ctor\n&quot;</span>);</span><br><span class="line">		x = <span class="number">1919</span>;</span><br><span class="line">		y = <span class="number">810</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	~<span class="built_in">bar</span>() &#123; <span class="built_in">printf</span>(<span class="string">&quot;bar dtor\n&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>形如<code>foo()</code>和<code>foo(int x, int y)</code>这种没有返回类型的与类同名的函数就是<code>构造函数</code>，通常在类对象生成时自动调用；</p>
+<p>形如<code>~bar()</code>和<code>~foo()</code>这种没有返回类型，与类同名并且在前面加上<code>~</code>的函数，就是<code>析构函数</code>，通常在类对象生命周期结束时自动调用；</p>
+<p>这两类函数，如果没有编写，编译器会自动生成默认构造函数和析构函数</p>
+<h2 id="inheritance-继承"><a href="#inheritance-继承" class="headerlink" title="inheritance(继承)"></a>inheritance(继承)</h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">bar</span> : <span class="keyword">public</span> foo</span><br></pre></td></tr></table></figure>
+
+<p><code>bar</code>继承自<code>foo</code>，是<code>foo</code>的派生类，这个<code>public</code>是访问修饰符<code>access-specifier</code></p>
+<blockquote>
+<p>当一个类派生自基类，该基类可以被继承为 <strong>public、protected</strong> 或 <strong>private</strong> 几种类型。继承类型是通过上面讲解的访问修饰符 access-specifier 来指定的。</p>
+<p>我们几乎不使用 <strong>protected</strong> 或 <strong>private</strong> 继承，通常使用 <strong>public</strong> 继承。当使用不同类型的继承时，遵循以下几个规则：</p>
+<ul>
+<li><strong>公有继承（public）：</strong>当一个类派生自<strong>公有</strong>基类时，基类的<strong>公有</strong>成员也是派生类的<strong>公有</strong>成员，基类的<strong>保护</strong>成员也是派生类的<strong>保护</strong>成员，基类的<strong>私有</strong>成员不能直接被派生类访问，但是可以通过调用基类的<strong>公有</strong>和<strong>保护</strong>成员来访问。</li>
+<li><strong>保护继承（protected）：</strong> 当一个类派生自<strong>保护</strong>基类时，基类的<strong>公有</strong>和<strong>保护</strong>成员将成为派生类的<strong>保护</strong>成员。</li>
+<li><strong>私有继承（private）：</strong>当一个类派生自<strong>私有</strong>基类时，基类的<strong>公有</strong>和<strong>保护</strong>成员将成为派生类的<strong>私有</strong>成员。</li>
+</ul>
+</blockquote>
+<p>从输出结果可以看出，<code>bar</code>初始化的时候调用了<code>foo</code>的默认构造函数<code>default ctor</code>，然后调用了<code>bar</code>的<code>ctor</code>，而且在最后变量销毁析构时，先调用了<code>bar</code>的<code>dtor</code>，然后调用了<code>foo</code>的<code>dtor</code>。</p>
+<p><strong>这说明子类也会继承父类的私有变量，并且先构造父类的变量，然后构造子类的变量，最后先析构子类的变量，最后析构父类的变量，这刚好是相反的顺序。</strong></p>
+<h2 id="Polymorphism-多态"><a href="#Polymorphism-多态" class="headerlink" title="Polymorphism(多态)"></a>Polymorphism(多态)</h2><p>我们可以发现输出结果都输出了<code>foo</code>的成员函数， 这应该是错误的输出，因为编译器在调用函数前把这个成员函数设置为<code>基类</code>的版本。</p>
+<p>但当我们在<code>foo</code>的成员函数前加上<code>virtual</code>tag，就能正常输出</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">foo member function</span><br><span class="line">114 514</span><br><span class="line">bar member function</span><br><span class="line">1919 810</span><br></pre></td></tr></table></figure>
+
+<p>此时<code>foo</code>的成员函数声明为虚函数，编译器在调用函数时，根据调用的对象来动态确定这个函数的版本，这就是C++的<code>多态</code></p>
+<h2 id="class-internal"><a href="#class-internal" class="headerlink" title="class internal"></a>class internal</h2><p>现在我们通过动态调试来看看class的内部情况</p>
+<p><img src="/../issue_images/step_into_c++_1.png" alt="1"></p>
+<p><img src="/../issue_images/step_into_c++5.png" alt="bar_ctor"></p>
+<p>通过ida可以发现</p>
+<p>在构造对象时将<code>vtable</code>放在结构体的首地址</p>
+<p><code>bar</code>确实继承了<code>foo</code>类并且调用了<code>foo default ctor</code></p>
+<p><img src="/../issue_images/step_into_c++_2.png" alt="virtual function1"></p>
+<p>这两处<code>call eax/edx</code>是<code>foo</code>和<code>bar</code>的<code>member</code>函数调用</p>
+<p>首先取类地址，存放到对应的指针变量处，然后取出<code>vtable</code>的值，最后取出<code>vtable</code>的第一个函数地址，调用该函数</p>
+<p><img src="/../issue_images/step_into_c++_4.png" alt="vtable"></p>
+<p>虚函数表是存放在<code>.rdata</code>段</p>
+<p><img src="/../issue_images/step_into_c++_3.png" alt="virtual function2"></p>
+<p>这两处<code>call eax</code>是<code>foo</code>和<code>bar</code>的<code>fun</code>函数调用，仅仅只是在最后取函数地址时加了偏移</p>
+<h1 id="STL-internal-in-windows"><a href="#STL-internal-in-windows" class="headerlink" title="STL internal in windows"></a>STL internal in windows</h1><p>(本文仅讨论部分STL的内部结构和内存管理)</p>
+<h2 id="vector"><a href="#vector" class="headerlink" title="vector"></a>vector</h2><h3 id="memory-management"><a href="#memory-management" class="headerlink" title="memory  management"></a>memory  management</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> _CRT_SECURE_NO_WARNINGS</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">print</span><span class="params">(std::vector&lt;<span class="type">int</span>&gt;&amp; x)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> cnt = <span class="number">1</span>;</span><br><span class="line">	std::vector&lt;<span class="type">int</span>&gt;::const_iterator cb = x.<span class="built_in">cbegin</span>();</span><br><span class="line">	std::vector&lt;<span class="type">int</span>&gt;::const_iterator ce = x.<span class="built_in">cend</span>();</span><br><span class="line"></span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;size: %d, capacity: %d\n&quot;</span>, x.<span class="built_in">size</span>(), x.<span class="built_in">capacity</span>());</span><br><span class="line">	<span class="keyword">for</span> (; cb != ce; cb++) &#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;%3d&quot;</span>, *cb);</span><br><span class="line">		<span class="keyword">if</span> (cnt++ % <span class="number">10</span> == <span class="number">0</span>) &#123;</span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	std::vector&lt;<span class="type">int</span>&gt; a;</span><br><span class="line">	<span class="built_in">print</span>(a);</span><br><span class="line">	</span><br><span class="line">	<span class="type">int</span> tmp = a.<span class="built_in">capacity</span>();</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">20</span>; i++)</span><br><span class="line">	&#123;</span><br><span class="line">		a.<span class="built_in">push_back</span>(i);</span><br><span class="line">		<span class="keyword">if</span> (tmp != a.<span class="built_in">capacity</span>()) &#123;</span><br><span class="line">			<span class="built_in">print</span>(a);</span><br><span class="line">			tmp = a.<span class="built_in">capacity</span>();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>output</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">size: 0, capacity: 0</span><br><span class="line"></span><br><span class="line">size: 1, capacity: 1</span><br><span class="line">  0</span><br><span class="line">size: 2, capacity: 2</span><br><span class="line">  0  1</span><br><span class="line">size: 3, capacity: 3</span><br><span class="line">  0  1  2</span><br><span class="line">size: 4, capacity: 4</span><br><span class="line">  0  1  2  3</span><br><span class="line">size: 5, capacity: 6</span><br><span class="line">  0  1  2  3  4</span><br><span class="line">size: 7, capacity: 9</span><br><span class="line">  0  1  2  3  4  5  6</span><br><span class="line">size: 10, capacity: 13</span><br><span class="line">  0  1  2  3  4  5  6  7  8  9</span><br><span class="line"></span><br><span class="line">size: 14, capacity: 19</span><br><span class="line">  0  1  2  3  4  5  6  7  8  9</span><br><span class="line"> 10 11 12 13</span><br><span class="line">size: 20, capacity: 28</span><br><span class="line">  0  1  2  3  4  5  6  7  8  9</span><br><span class="line"> 10 11 12 13 14 15 16 17 18 19</span><br></pre></td></tr></table></figure>
+
+<p>可以发现在windows平台下的<code>vector</code>与linux的<code>vector</code>的内存策略不相同，在linux下，若<code>vector</code>的内存池满了，会直接<strong>申请两倍的内存池，并将原来的内容copy过去(若原来的内存池大小为0，会变成1)</strong></p>
+<p><strong><code>push_back</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">_CONSTEXPR20 <span class="type">void</span> <span class="title">push_back</span><span class="params">(<span class="type">const</span> _Ty&amp; _Val)</span> </span>&#123; <span class="comment">// insert element at end, provide strong guarantee</span></span><br><span class="line">    _Emplace_one_at_back(_Val);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">_CONSTEXPR20 <span class="type">void</span> <span class="title">push_back</span><span class="params">(_Ty&amp;&amp; _Val)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// insert by moving into element at end, provide strong guarantee</span></span><br><span class="line">    _Emplace_one_at_back(_STD <span class="built_in">move</span>(_Val));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>push_back</code>会根据<code>_val</code>的类型调用对应的**<code>_Emplace_one_at_back</code>**</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span>... _Valty&gt;</span><br><span class="line">_CONSTEXPR20 _Ty&amp; _Emplace_one_at_back(_Valty&amp;&amp;... _Val) &#123;</span><br><span class="line">    <span class="comment">// insert by perfectly forwarding into element at end, provide strong guarantee</span></span><br><span class="line">    <span class="keyword">auto</span>&amp; _My_data   = _Mypair._Myval2;</span><br><span class="line">    pointer&amp; _Mylast = _My_data._Mylast;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_Mylast != _My_data._Myend) &#123;</span><br><span class="line">        <span class="keyword">return</span> _Emplace_back_with_unused_capacity(_STD forward&lt;_Valty&gt;(_Val)...);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> *_Emplace_reallocate(_Mylast, _STD forward&lt;_Valty&gt;(_Val)...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当内存池满了,调用</p>
+<p><strong><code>_Emplace_reallocate(_Mylast, _STD forward&lt;_Valty&gt;(_Val)...)</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ...</span></span><br><span class="line"><span class="type">const</span> size_type _Newsize     = _Oldsize + <span class="number">1</span>;</span><br><span class="line"><span class="type">const</span> size_type _Newcapacity = _Calculate_growth(_Newsize);</span><br><span class="line"><span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
+
+<p><code>_Oldsize</code>就是原来内存池的大小，然后<code>_Newsize</code>为<code>_Oldsize + 1</code>后调用</p>
+<p><strong><code>_Calculate_growth(_Newsize)</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">_CONSTEXPR20 size_type _Calculate_growth(<span class="type">const</span> size_type _Newsize) <span class="type">const</span> &#123;</span><br><span class="line">    <span class="comment">// given _Oldcapacity and _Newsize, calculate geometric growth</span></span><br><span class="line">    <span class="type">const</span> size_type _Oldcapacity = <span class="built_in">capacity</span>();</span><br><span class="line">    <span class="type">const</span> <span class="keyword">auto</span> _Max              = <span class="built_in">max_size</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_Oldcapacity &gt; _Max - _Oldcapacity / <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> _Max; <span class="comment">// geometric growth would overflow</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> size_type _Geometric = _Oldcapacity + _Oldcapacity / <span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_Geometric &lt; _Newsize) &#123;</span><br><span class="line">        <span class="keyword">return</span> _Newsize; <span class="comment">// geometric growth would be insufficient</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> _Geometric; <span class="comment">// geometric growth is sufficient</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>看到这里我们就清楚了<code>vector</code>的内存管理，新内存池大小就是max(_Oldsize + 1, _Oldsize + _Oldsize &#x2F; 2)，这确实与上文的输出结果相匹配</strong></p>
+<h3 id="internal"><a href="#internal" class="headerlink" title="internal"></a>internal</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> _Alty        = _Rebind_alloc_t&lt;_Alloc, _Ty&gt;;</span><br><span class="line"><span class="keyword">using</span> _Scary_val = _Vector_val&lt;<span class="type">conditional_t</span>&lt;_Is_simple_alloc_v&lt;_Alty&gt;, _Simple_types&lt;_Ty&gt;,</span><br><span class="line">        _Vec_iter_types&lt;_Ty, size_type, difference_type, pointer, const_pointer, _Ty&amp;, <span class="type">const</span> _Ty&amp;&gt;&gt;&gt;;</span><br><span class="line">_Compressed_pair&lt;_Alty, _Scary_val&gt; _Mypair;</span><br></pre></td></tr></table></figure>
+
+<p><code>vector</code>就一个成员变量<code>_Mypair</code>，是<code>_Compressed_pair</code>模板类</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Ty1</span>, <span class="keyword">class</span> <span class="title class_">_Ty2</span>, <span class="type">bool</span> = is_empty_v&lt;_Ty1&gt; &amp;&amp; !is_final_v&lt;_Ty1&gt;&gt;</span><br><span class="line"><span class="keyword">class</span> _Compressed_pair <span class="keyword">final</span> : <span class="keyword">private</span> _Ty1 &#123; <span class="comment">// store a pair of values, deriving from empty first</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    _Ty2 _Myval2;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">using</span> _Mybase = _Ty1; <span class="comment">// for visualization</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">class</span>... _Other2&gt;</span><br><span class="line">    <span class="keyword">constexpr</span> <span class="keyword">explicit</span> _Compressed_pair(_Zero_then_variadic_args_t, _Other2&amp;&amp;... _Val2) <span class="built_in">noexcept</span>(</span><br><span class="line">        conjunction_v&lt;is_nothrow_default_constructible&lt;_Ty1&gt;, is_nothrow_constructible&lt;_Ty2, _Other2...&gt;&gt;)</span><br><span class="line">        : _Ty1(), _Myval2(_STD forward&lt;_Other2&gt;(_Val2)...) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Other1</span>, <span class="keyword">class</span>... _Other2&gt;</span><br><span class="line">    <span class="keyword">constexpr</span> _Compressed_pair(_One_then_variadic_args_t, _Other1&amp;&amp; _Val1, _Other2&amp;&amp;... _Val2) <span class="built_in">noexcept</span>(</span><br><span class="line">        conjunction_v&lt;is_nothrow_constructible&lt;_Ty1, _Other1&gt;, is_nothrow_constructible&lt;_Ty2, _Other2...&gt;&gt;)</span><br><span class="line">        : _Ty1(_STD forward&lt;_Other1&gt;(_Val1)), _Myval2(_STD forward&lt;_Other2&gt;(_Val2)...) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">constexpr</span> _Ty1&amp; _Get_first() <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">constexpr</span> <span class="type">const</span> _Ty1&amp; _Get_first() <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>_Compressed_pair</code>派生于第一个模板参数<code>_Alty</code>，其实也就是<code>_Compressed_pair</code>就是一个内存配置器，通过<code>_Get_first()</code>可以得到内存配置器，内含第二个模板参数对象<code>_Scary_val</code>，命名为<code>_Myval2</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Val_types</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">_Vector_val</span> : <span class="keyword">public</span> _Container_base &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">using</span> value_type      = <span class="keyword">typename</span> _Val_types::value_type;</span><br><span class="line">    <span class="keyword">using</span> size_type       = <span class="keyword">typename</span> _Val_types::size_type;</span><br><span class="line">    <span class="keyword">using</span> difference_type = <span class="keyword">typename</span> _Val_types::difference_type;</span><br><span class="line">    <span class="keyword">using</span> pointer         = <span class="keyword">typename</span> _Val_types::pointer;</span><br><span class="line">    <span class="keyword">using</span> const_pointer   = <span class="keyword">typename</span> _Val_types::const_pointer;</span><br><span class="line">    <span class="keyword">using</span> reference       = value_type&amp;;</span><br><span class="line">    <span class="keyword">using</span> const_reference = <span class="type">const</span> value_type&amp;;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 _Vector_val() <span class="keyword">noexcept</span> : _Myfirst(), _Mylast(), _Myend() &#123;&#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 _Vector_val(pointer _First, pointer _Last, pointer _End) <span class="keyword">noexcept</span></span><br><span class="line">        : _Myfirst(_First), _Mylast(_Last), _Myend(_End) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Swap_val(_Vector_val&amp; _Right) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>-&gt;_Swap_proxy_and_iterators(_Right);</span><br><span class="line">        _Swap_adl(_Myfirst, _Right._Myfirst);</span><br><span class="line">        _Swap_adl(_Mylast, _Right._Mylast);</span><br><span class="line">        _Swap_adl(_Myend, _Right._Myend);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Take_contents(_Vector_val&amp; _Right) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>-&gt;_Swap_proxy_and_iterators(_Right);</span><br><span class="line">        _Myfirst = _Right._Myfirst;</span><br><span class="line">        _Mylast  = _Right._Mylast;</span><br><span class="line">        _Myend   = _Right._Myend;</span><br><span class="line"></span><br><span class="line">        _Right._Myfirst = <span class="literal">nullptr</span>;</span><br><span class="line">        _Right._Mylast  = <span class="literal">nullptr</span>;</span><br><span class="line">        _Right._Myend   = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pointer _Myfirst; <span class="comment">// pointer to beginning of array</span></span><br><span class="line">    pointer _Mylast; <span class="comment">// pointer to current end of sequence</span></span><br><span class="line">    pointer _Myend; <span class="comment">// pointer to end of array</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>_Vector_val</code>派生于<code>_Container_base</code>，有三个指针对象<code>_Myfirst, _Mylast, _Myend</code>，这与linux的STL如出一辙。<code>_Container_base</code>没啥重要的东西，直接略过，这三个指针才是<code>vector</code>内存维护的关键</p>
+<p><img src="/../issue_images/step_into_c++_vector_1.png"></p>
+<p><img src="/../issue_images/step_into_c++_vector_2.png"></p>
+<h2 id="string"><a href="#string" class="headerlink" title="string"></a>string</h2><p>在本文中，我只介绍<code>std::string</code>， 使用 <code>char</code> 类型的元素将 <code>basic_string</code> 类模板的专用化描述为 <code>string</code> 的类型</p>
+<h3 id="memory-management-1"><a href="#memory-management-1" class="headerlink" title="memory management"></a>memory management</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> _CRT_SECURE_NO_WARNINGS</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">print</span><span class="params">(std::string&amp; s)</span> </span>&#123;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;size: %d capacity: %d\n&quot;</span>, s.<span class="built_in">size</span>(), s.<span class="built_in">capacity</span>());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">char</span> str[] = <span class="string">&quot;Hello enllus1on&quot;</span>;</span><br><span class="line">	std::string s;</span><br><span class="line">	<span class="function">std::string <span class="title">s1</span><span class="params">(<span class="string">&quot;114 514&quot;</span>)</span></span>;</span><br><span class="line">	std::string s2 = <span class="string">&quot;1919810&quot;</span>;</span><br><span class="line">	<span class="type">char</span> error[] = <span class="string">&quot;bad bad bad bad errorrrrr&quot;</span>;</span><br><span class="line">	<span class="function">std::string <span class="title">s3</span><span class="params">(error)</span></span>;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>, s1.<span class="built_in">c_str</span>());</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>, s2.<span class="built_in">c_str</span>());</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>, s3.<span class="built_in">c_str</span>());</span><br><span class="line">	<span class="built_in">print</span>(s1);</span><br><span class="line">	<span class="built_in">print</span>(s2);</span><br><span class="line">	<span class="built_in">print</span>(s3);</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> idx = <span class="number">0</span>;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> tmp = s.<span class="built_in">capacity</span>();</span><br><span class="line">	<span class="built_in">print</span>(s);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">500</span>; i++) &#123;</span><br><span class="line">		s += str[idx];</span><br><span class="line">		idx = (idx + <span class="number">1</span>) % <span class="number">15</span>;</span><br><span class="line">		<span class="keyword">if</span> (tmp != s.<span class="built_in">capacity</span>()) &#123;</span><br><span class="line">			tmp = s.<span class="built_in">capacity</span>();</span><br><span class="line">			<span class="built_in">print</span>(s);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>output</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">114 514</span><br><span class="line">1919810</span><br><span class="line">bad bad bad bad errorrrrr</span><br><span class="line">size: 7 capacity: 15</span><br><span class="line">size: 7 capacity: 15</span><br><span class="line">size: 25 capacity: 31</span><br><span class="line">size: 0 capacity: 15</span><br><span class="line">size: 16 capacity: 31</span><br><span class="line">size: 32 capacity: 47</span><br><span class="line">size: 48 capacity: 70</span><br><span class="line">size: 71 capacity: 105</span><br><span class="line">size: 106 capacity: 157</span><br><span class="line">size: 158 capacity: 235</span><br><span class="line">size: 236 capacity: 352</span><br><span class="line">size: 353 capacity: 528</span><br></pre></td></tr></table></figure>
+
+<p>默认构造</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">_CONSTEXPR20</span></span><br><span class="line"><span class="function"><span class="title">basic_string</span><span class="params">()</span> <span class="title">noexcept</span><span class="params">(is_nothrow_default_constructible_v&lt;_Alty&gt;)</span> : _Mypair(_Zero_then_variadic_args_t&#123;</span>&#125;) &#123;</span><br><span class="line">    _Mypair._Myval2._Alloc_proxy(_GET_PROXY_ALLOCATOR(_Alty, _Getal()));</span><br><span class="line">    _Tidy_init();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>_Tidy_init()</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">_CONSTEXPR20 <span class="type">void</span> _Tidy_init() <span class="keyword">noexcept</span> &#123;</span><br><span class="line">    <span class="comment">// initialize basic_string data members</span></span><br><span class="line">    <span class="keyword">auto</span>&amp; _My_data   = _Mypair._Myval2;</span><br><span class="line">    _My_data._Mysize = <span class="number">0</span>;</span><br><span class="line">    _My_data._Myres  = _BUF_SIZE - <span class="number">1</span>;</span><br><span class="line">    _My_data._Activate_SSO_buffer();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// the _Traits::assign is last so the codegen doesn&#x27;t think the char write can alias this</span></span><br><span class="line">    _Traits::<span class="built_in">assign</span>(_My_data._Bx._Buf[<span class="number">0</span>], _Elem());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据上面的输出结果，并且多次运行，我们可以发现<code>_BUF_SIZE</code>是固定值为<code>0x10</code>，<code>capacity</code>也就是<code>_Myres</code>的值</p>
+<p>用字符串构造，会自动计算字符串长度</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">_CONSTEXPR20 <span class="title">basic_string</span><span class="params">(_In_z_ <span class="type">const</span> _Elem* <span class="type">const</span> _Ptr)</span> : _Mypair(_Zero_then_variadic_args_t&#123;</span>&#125;) &#123;</span><br><span class="line">    _Construct&lt;_Construct_strategy::_From_ptr&gt;(_Ptr, _Convert_size&lt;size_type&gt;(_Traits::<span class="built_in">length</span>(_Ptr)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们看下这个<code>_Construct</code>函数</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">template</span> &lt;_Construct_strategy _Strat, <span class="keyword">class</span> <span class="title class_">_Char_or_ptr</span>&gt;</span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Construct(<span class="type">const</span> _Char_or_ptr _Arg, _CRT_GUARDOVERFLOW <span class="type">const</span> size_type _Count) &#123;</span><br><span class="line">        <span class="keyword">auto</span>&amp; _My_data = _Mypair._Myval2;</span><br><span class="line">        _STL_INTERNAL_CHECK(!_My_data._Large_string_engaged());</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(_Strat == _Construct_strategy::_From_char)</span> </span>&#123;</span><br><span class="line">            _STL_INTERNAL_STATIC_ASSERT(is_same_v&lt;_Char_or_ptr, _Elem&gt;);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            _STL_INTERNAL_STATIC_ASSERT(_Is_elem_cptr&lt;_Char_or_ptr&gt;::value);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (_Count &gt; <span class="built_in">max_size</span>()) &#123;</span><br><span class="line">            _Xlen_string(); <span class="comment">// result too long</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">auto</span>&amp; _Al       = _Getal();</span><br><span class="line">        <span class="keyword">auto</span>&amp;&amp; _Alproxy = _GET_PROXY_ALLOCATOR(_Alty, _Al);</span><br><span class="line">        _Container_proxy_ptr&lt;_Alty&gt; _Proxy(_Alproxy, _My_data);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (_Count &lt; _BUF_SIZE) &#123;</span><br><span class="line">            _My_data._Mysize = _Count;</span><br><span class="line">            _My_data._Myres  = _BUF_SIZE - <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">            <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(_Strat == _Construct_strategy::_From_char)</span> </span>&#123;</span><br><span class="line">                _Traits::<span class="built_in">assign</span>(_My_data._Bx._Buf, _Count, _Arg);</span><br><span class="line">                _Traits::<span class="built_in">assign</span>(_My_data._Bx._Buf[_Count], _Elem());</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">constexpr</span> (_Strat == _Construct_strategy::_From_ptr) &#123;</span><br><span class="line">                _Traits::<span class="built_in">copy</span>(_My_data._Bx._Buf, _Arg, _Count);</span><br><span class="line">                _Traits::<span class="built_in">assign</span>(_My_data._Bx._Buf[_Count], _Elem());</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123; <span class="comment">// _Strat == _Construct_strategy::_From_string</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> _INSERT_STRING_ANNOTATION</span></span><br><span class="line">                _Traits::<span class="built_in">copy</span>(_My_data._Bx._Buf, _Arg, _Count + <span class="number">1</span>);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span> <span class="comment">// ^^^ _INSERT_STRING_ANNOTATION / !_INSERT_STRING_ANNOTATION vvv</span></span></span><br><span class="line">                _Traits::<span class="built_in">copy</span>(_My_data._Bx._Buf, _Arg, _BUF_SIZE);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">// !_INSERT_STRING_ANNOTATION</span></span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            _Proxy._Release();</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        _My_data._Myres               = _BUF_SIZE - <span class="number">1</span>;</span><br><span class="line">        <span class="type">const</span> size_type _New_capacity = _Calculate_growth(_Count);</span><br><span class="line">        <span class="type">const</span> pointer _New_ptr        = _Al.<span class="built_in">allocate</span>(_New_capacity + <span class="number">1</span>); <span class="comment">// throws</span></span><br><span class="line">        _Construct_in_place(_My_data._Bx._Ptr, _New_ptr);</span><br><span class="line"></span><br><span class="line">        _Start_element_lifetimes(_Unfancy(_New_ptr), _New_capacity + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        _My_data._Mysize = _Count;</span><br><span class="line">        _My_data._Myres  = _New_capacity;</span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(_Strat == _Construct_strategy::_From_char)</span> </span>&#123;</span><br><span class="line">            _Traits::<span class="built_in">assign</span>(_Unfancy(_New_ptr), _Count, _Arg);</span><br><span class="line">            _Traits::<span class="built_in">assign</span>(_Unfancy(_New_ptr)[_Count], _Elem());</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">constexpr</span> (_Strat == _Construct_strategy::_From_ptr) &#123;</span><br><span class="line">            _Traits::<span class="built_in">copy</span>(_Unfancy(_New_ptr), _Arg, _Count);</span><br><span class="line">            _Traits::<span class="built_in">assign</span>(_Unfancy(_New_ptr)[_Count], _Elem());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; <span class="comment">// _Strat == _Construct_strategy::_From_string</span></span><br><span class="line">            _Traits::<span class="built_in">copy</span>(_Unfancy(_New_ptr), _Arg, _Count + <span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        _ASAN_STRING_CREATE(*<span class="keyword">this</span>);</span><br><span class="line">        _Proxy._Release();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>从源码中我们可以得出</p>
+<ul>
+<li>当字符串的长度<code>_Count</code>＜<code>_BUF_SIZE</code>时，会直接记录到<code>_Mysize(_Count)</code>和<code>_Myres(_BUF_SIZE - 1)</code>，也就是<code>size</code>和<code>capacity</code>的值，然后copy后return</li>
+<li>否则，会先记录<code>_Myres</code>为<code>_BUF_SIZE - 1</code>调用<code>_Calculate_growth(_Count)</code>计算新的<code>capacity</code>，然后记录到<code>_Mysize(_Count)</code>和<code>_Myres(_New_capacity)</code>，copy后return</li>
+</ul>
+<p><strong><code>_Calculate_growth(_Count)</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">_NODISCARD _CONSTEXPR20 size_type _Calculate_growth(<span class="type">const</span> size_type _Requested) <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> _Calculate_growth(_Requested, _Mypair._Myval2._Myres, <span class="built_in">max_size</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">_NODISCARD <span class="type">static</span> _CONSTEXPR20 size_type _Calculate_growth(</span><br><span class="line">    <span class="type">const</span> size_type _Requested, <span class="type">const</span> size_type _Old, <span class="type">const</span> size_type _Max) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">    <span class="type">const</span> size_type _Masked = _Requested | _ALLOC_MASK;</span><br><span class="line">    <span class="keyword">if</span> (_Masked &gt; _Max) &#123; <span class="comment">// the mask overflows, settle for max_size()</span></span><br><span class="line">        <span class="keyword">return</span> _Max;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_Old &gt; _Max - _Old / <span class="number">2</span>) &#123; <span class="comment">// similarly, geometric overflows</span></span><br><span class="line">        <span class="keyword">return</span> _Max;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (_STD max)(_Masked, _Old + _Old / <span class="number">2</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上文中的<code>_BUF_SIZE</code>和<code>_ALLOC_MASK</code>实际上都来源于<code>_String_val</code>类</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">constexpr</span> size_type _BUF_SIZE = <span class="number">16</span> / <span class="built_in">sizeof</span>(value_type) &lt; <span class="number">1</span> ? <span class="number">1</span> : <span class="number">16</span> / <span class="built_in">sizeof</span>(value_type);</span><br><span class="line"><span class="comment">// roundup mask for allocated buffers, [0, 15]:</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">constexpr</span> size_type _ALLOC_MASK = <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">1</span> ? <span class="number">15</span></span><br><span class="line">                                       : <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">2</span> ? <span class="number">7</span></span><br><span class="line">                                       : <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">4</span> ? <span class="number">3</span></span><br><span class="line">                                       : <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">8</span> ? <span class="number">1</span></span><br><span class="line">                                                                 : <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>由于这里的<code>value_type</code>是<code>char</code>，所以<code>_BUF_SIZE</code>是0x10，<code>_ALLOC_MASK</code>是0xF</p>
+<p>看到这我们就清楚了，<strong>当<code>_Count</code>＞<code>_BUF_SIZE - 1</code>时，<code>_New_capacity</code>的值为<code>max(_Count | 0xF, _Old_capacity + _Old_capacity &gt;&gt; 1)</code></strong></p>
+<h3 id="internal-1"><a href="#internal-1" class="headerlink" title="internal"></a>internal</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> _Alty        = _Rebind_alloc_t&lt;_Alloc, _Elem&gt;;</span><br><span class="line"><span class="keyword">using</span> _Scary_val = _String_val&lt;<span class="type">conditional_t</span>&lt;_Is_simple_alloc_v&lt;_Alty&gt;, _Simple_types&lt;_Elem&gt;,</span><br><span class="line">    _String_iter_types&lt;_Elem, <span class="keyword">typename</span> _Alty_traits::size_type, <span class="keyword">typename</span> _Alty_traits::difference_type,</span><br><span class="line">        <span class="keyword">typename</span> _Alty_traits::pointer, <span class="keyword">typename</span> _Alty_traits::const_pointer, _Elem&amp;, <span class="type">const</span> _Elem&amp;&gt;&gt;&gt;;</span><br><span class="line">_Compressed_pair&lt;_Alty, _Scary_val&gt; _Mypair;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>string</code>也就只有<code>_Compressed_pair</code>这一个类成员</p>
+<p><strong><code>_Compressed_pair</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Ty1</span>, <span class="keyword">class</span> <span class="title class_">_Ty2</span>, <span class="type">bool</span> = is_empty_v&lt;_Ty1&gt; &amp;&amp; !is_final_v&lt;_Ty1&gt;&gt;</span><br><span class="line"><span class="keyword">class</span> _Compressed_pair <span class="keyword">final</span> : <span class="keyword">private</span> _Ty1 &#123; <span class="comment">// store a pair of values, deriving from empty first</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    _Ty2 _Myval2;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">using</span> _Mybase = _Ty1; <span class="comment">// for visualization</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">class</span>... _Other2&gt;</span><br><span class="line">    <span class="keyword">constexpr</span> <span class="keyword">explicit</span> _Compressed_pair(_Zero_then_variadic_args_t, _Other2&amp;&amp;... _Val2) <span class="built_in">noexcept</span>(</span><br><span class="line">        conjunction_v&lt;is_nothrow_default_constructible&lt;_Ty1&gt;, is_nothrow_constructible&lt;_Ty2, _Other2...&gt;&gt;)</span><br><span class="line">        : _Ty1(), _Myval2(_STD forward&lt;_Other2&gt;(_Val2)...) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Other1</span>, <span class="keyword">class</span>... _Other2&gt;</span><br><span class="line">    <span class="keyword">constexpr</span> _Compressed_pair(_One_then_variadic_args_t, _Other1&amp;&amp; _Val1, _Other2&amp;&amp;... _Val2) <span class="built_in">noexcept</span>(</span><br><span class="line">        conjunction_v&lt;is_nothrow_constructible&lt;_Ty1, _Other1&gt;, is_nothrow_constructible&lt;_Ty2, _Other2...&gt;&gt;)</span><br><span class="line">        : _Ty1(_STD forward&lt;_Other1&gt;(_Val1)), _Myval2(_STD forward&lt;_Other2&gt;(_Val2)...) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">constexpr</span> _Ty1&amp; _Get_first() <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">constexpr</span> <span class="type">const</span> _Ty1&amp; _Get_first() <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>和<code>vector</code>一样，<code>_Compressed_pair</code>派生于第一个模板参数<code>_Alty</code>，内含第二个模板参数对象<code>_Scary_val</code>等同于<code>_String_val</code>类，命名为<code>_Myval2</code></p>
+<p><strong><code>_String_val</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Val_types</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">_String_val</span> : <span class="keyword">public</span> _Container_base &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">using</span> value_type      = <span class="keyword">typename</span> _Val_types::value_type;</span><br><span class="line">    <span class="keyword">using</span> size_type       = <span class="keyword">typename</span> _Val_types::size_type;</span><br><span class="line">    <span class="keyword">using</span> difference_type = <span class="keyword">typename</span> _Val_types::difference_type;</span><br><span class="line">    <span class="keyword">using</span> pointer         = <span class="keyword">typename</span> _Val_types::pointer;</span><br><span class="line">    <span class="keyword">using</span> const_pointer   = <span class="keyword">typename</span> _Val_types::const_pointer;</span><br><span class="line">    <span class="keyword">using</span> reference       = value_type&amp;;</span><br><span class="line">    <span class="keyword">using</span> const_reference = <span class="type">const</span> value_type&amp;;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 _String_val() <span class="keyword">noexcept</span> : _Bx() &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// length of internal buffer, [1, 16]:</span></span><br><span class="line">    <span class="type">static</span> <span class="keyword">constexpr</span> size_type _BUF_SIZE = <span class="number">16</span> / <span class="built_in">sizeof</span>(value_type) &lt; <span class="number">1</span> ? <span class="number">1</span> : <span class="number">16</span> / <span class="built_in">sizeof</span>(value_type);</span><br><span class="line">    <span class="comment">// roundup mask for allocated buffers, [0, 15]:</span></span><br><span class="line">    <span class="type">static</span> <span class="keyword">constexpr</span> size_type _ALLOC_MASK = <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">1</span> ? <span class="number">15</span></span><br><span class="line">                                           : <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">2</span> ? <span class="number">7</span></span><br><span class="line">                                           : <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">4</span> ? <span class="number">3</span></span><br><span class="line">                                           : <span class="built_in">sizeof</span>(value_type) &lt;= <span class="number">8</span> ? <span class="number">1</span></span><br><span class="line">                                                                     : <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 value_type* _Myptr() <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        value_type* _Result = _Bx._Buf;</span><br><span class="line">        <span class="keyword">if</span> (_Large_string_engaged()) &#123;</span><br><span class="line">            _Result = _Unfancy(_Bx._Ptr);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> _Result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 <span class="type">const</span> value_type* _Myptr() <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="type">const</span> value_type* _Result = _Bx._Buf;</span><br><span class="line">        <span class="keyword">if</span> (_Large_string_engaged()) &#123;</span><br><span class="line">            _Result = _Unfancy(_Bx._Ptr);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> _Result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 <span class="type">bool</span> _Large_string_engaged() <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> _BUF_SIZE &lt;= _Myres;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">constexpr</span> <span class="type">void</span> _Activate_SSO_buffer() <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="comment">// start the lifetime of the array elements</span></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> _HAS_CXX20</span></span><br><span class="line">        <span class="keyword">if</span> (_STD <span class="built_in">is_constant_evaluated</span>()) &#123;</span><br><span class="line">            <span class="keyword">for</span> (size_type _Idx = <span class="number">0</span>; _Idx &lt; _BUF_SIZE; ++_Idx) &#123;</span><br><span class="line">                _Bx._Buf[_Idx] = <span class="built_in">value_type</span>();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">// _HAS_CXX20</span></span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Check_offset(<span class="type">const</span> size_type _Off) <span class="type">const</span> &#123;</span><br><span class="line">        <span class="comment">// checks whether _Off is in the bounds of [0, size()]</span></span><br><span class="line">        <span class="keyword">if</span> (_Mysize &lt; _Off) &#123;</span><br><span class="line">            _Xran();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Check_offset_exclusive(<span class="type">const</span> size_type _Off) <span class="type">const</span> &#123;</span><br><span class="line">        <span class="comment">// checks whether _Off is in the bounds of [0, size())</span></span><br><span class="line">        <span class="keyword">if</span> (_Mysize &lt;= _Off) &#123;</span><br><span class="line">            _Xran();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    [[noreturn]] <span class="type">static</span> <span class="type">void</span> _Xran() &#123;</span><br><span class="line">        _Xout_of_range(<span class="string">&quot;invalid string position&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 size_type _Clamp_suffix_size(<span class="type">const</span> size_type _Off, <span class="type">const</span> size_type _Size) <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="comment">// trims _Size to the longest it can be assuming a string at/after _Off</span></span><br><span class="line">        <span class="keyword">return</span> (_STD min)(_Size, _Mysize - _Off);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">union</span> <span class="title class_">_Bxty</span> &#123; <span class="comment">// storage for small buffer or pointer to larger one</span></span><br><span class="line">        <span class="comment">// This constructor previously initialized _Ptr. Don&#x27;t rely on the new behavior without</span></span><br><span class="line">        <span class="comment">// renaming `_String_val` (and fixing the visualizer).</span></span><br><span class="line">        _CONSTEXPR20 _Bxty() <span class="keyword">noexcept</span> : _Buf() &#123;&#125; <span class="comment">// user-provided, for fancy pointers</span></span><br><span class="line">        _CONSTEXPR20 ~_Bxty() <span class="keyword">noexcept</span> &#123;&#125; <span class="comment">// user-provided, for fancy pointers</span></span><br><span class="line"></span><br><span class="line">        value_type _Buf[_BUF_SIZE];</span><br><span class="line">        pointer _Ptr;</span><br><span class="line">        <span class="type">char</span> _Alias[_BUF_SIZE]; <span class="comment">// TRANSITION, ABI: _Alias is preserved for binary compatibility (especially /clr)</span></span><br><span class="line">    &#125; _Bx;</span><br><span class="line"></span><br><span class="line">    size_type _Mysize = <span class="number">0</span>; <span class="comment">// current length of string</span></span><br><span class="line">    size_type _Myres  = <span class="number">0</span>; <span class="comment">// current storage reserved for string</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>所以，实际上<code>string</code>就三个成员变量<code>_Bx</code>、<code>_Mysize</code>、<code>_Myres</code>，其中<code>_Bx</code>是<code>union</code>联合体<code>_Bxty</code>，<code>union</code>的长度按<code>union</code>成员中最长的计算，其实也就是<code>0x10</code>的大小</p>
+<ul>
+<li>当<code>_Myres</code>&lt;<code>_BUF_SIZE</code>，<code>_Bx</code>通过<code>copy</code>或<code>assign</code>直接保存字符串内容</li>
+<li>当<code>_Myres</code>&gt;&#x3D;<code>_BUF_SIZE</code>，<code>_Bx</code>保存的是预留内存的指针，这个可以从上文的<code>_Construct</code>函数中得出</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// _Count &gt;= _BUF_SIZE</span></span><br><span class="line">		_My_data._Myres               = _BUF_SIZE - <span class="number">1</span>;</span><br><span class="line">        <span class="type">const</span> size_type _New_capacity = _Calculate_growth(_Count);</span><br><span class="line">        <span class="type">const</span> pointer _New_ptr        = _Al.<span class="built_in">allocate</span>(_New_capacity + <span class="number">1</span>); <span class="comment">// throws</span></span><br><span class="line">        _Construct_in_place(_My_data._Bx._Ptr, _New_ptr);</span><br><span class="line"></span><br><span class="line">        _Start_element_lifetimes(_Unfancy(_New_ptr), _New_capacity + <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        _My_data._Mysize = _Count;</span><br><span class="line">        _My_data._Myres  = _New_capacity;</span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(_Strat == _Construct_strategy::_From_char)</span> </span>&#123;</span><br><span class="line">            _Traits::<span class="built_in">assign</span>(_Unfancy(_New_ptr), _Count, _Arg);</span><br><span class="line">            _Traits::<span class="built_in">assign</span>(_Unfancy(_New_ptr)[_Count], _Elem());</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> <span class="built_in">constexpr</span> (_Strat == _Construct_strategy::_From_ptr) &#123;</span><br><span class="line">            _Traits::<span class="built_in">copy</span>(_Unfancy(_New_ptr), _Arg, _Count);</span><br><span class="line">            _Traits::<span class="built_in">assign</span>(_Unfancy(_New_ptr)[_Count], _Elem());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; <span class="comment">// _Strat == _Construct_strategy::_From_string</span></span><br><span class="line">            _Traits::<span class="built_in">copy</span>(_Unfancy(_New_ptr), _Arg, _Count + <span class="number">1</span>);</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<p>先计算<code>_New_capacity</code>也就是新的预留空间大小<code>_Myres</code>，然后开辟<code>_New_capacity + 1</code>大小的空间，并将指针保存到<code>_Bx</code>，并将字符串的内容<code>copy</code>或<code>assign</code>到开辟的内存</p>
+<p><img src="/../issue_images/step_into_c++_string_1.png" alt="string_1"></p>
+<h2 id="deque"><a href="#deque" class="headerlink" title="deque"></a>deque</h2><h3 id="internal-2"><a href="#internal-2" class="headerlink" title="internal"></a>internal</h3><p><code>deque</code>与<code>vector</code>、<code>string</code>不一样，不提供<code>capacity</code>接口，而且deque的内部数据结构更为复杂，我们直接从ida开始看</p>
+<p><img src="/../issue_images/step_into_c++_deque_1.png" alt="step_into_c++_deque_1"></p>
+<p>一共有5个成员变量，我们再配合源码分析每个成员的用途</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class deque</span></span><br><span class="line">	<span class="keyword">using</span> _Scary_val = _Deque_val&lt;<span class="type">conditional_t</span>&lt;_Is_simple_alloc_v&lt;_Alty&gt;, _Deque_simple_types&lt;_Ty&gt;,</span><br><span class="line">        _Deque_iter_types&lt;_Ty, <span class="keyword">typename</span> _Alty_traits::size_type, <span class="keyword">typename</span> _Alty_traits::difference_type,</span><br><span class="line">            <span class="keyword">typename</span> _Alty_traits::pointer, <span class="keyword">typename</span> _Alty_traits::const_pointer, _Ty&amp;, <span class="type">const</span> _Ty&amp;, _Mapptr&gt;&gt;&gt;;  </span><br><span class="line">	<span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">int</span> _Minimum_map_size = <span class="number">8</span>;</span><br><span class="line">    <span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">int</span> _Block_size       = _Scary_val::_Block_size;</span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line">    _Compressed_pair&lt;_Alty, _Scary_val&gt; _Mypair;</span><br></pre></td></tr></table></figure>
+
+<p><code>deque</code>同样也只有一个成员变量<code>_Compressed_pair</code>，<code>_Scary_val</code>等同于<code>_Deque_val</code>类</p>
+<p><strong><code>_Deque_val</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Val_types</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">_Deque_val</span> : <span class="keyword">public</span> _Container_base12 &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">using</span> value_type      = <span class="keyword">typename</span> _Val_types::value_type;</span><br><span class="line">    <span class="keyword">using</span> size_type       = <span class="keyword">typename</span> _Val_types::size_type;</span><br><span class="line">    <span class="keyword">using</span> difference_type = <span class="keyword">typename</span> _Val_types::difference_type;</span><br><span class="line">    <span class="keyword">using</span> pointer         = <span class="keyword">typename</span> _Val_types::pointer;</span><br><span class="line">    <span class="keyword">using</span> const_pointer   = <span class="keyword">typename</span> _Val_types::const_pointer;</span><br><span class="line">    <span class="keyword">using</span> reference       = value_type&amp;;</span><br><span class="line">    <span class="keyword">using</span> const_reference = <span class="type">const</span> value_type&amp;;</span><br><span class="line">    <span class="keyword">using</span> _Mapptr         = <span class="keyword">typename</span> _Val_types::_Mapptr;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">size_t</span> _Bytes = <span class="built_in">sizeof</span>(value_type);</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">int</span> _Block_size = _Bytes &lt;= <span class="number">1</span> ? <span class="number">16</span></span><br><span class="line">                                     : _Bytes &lt;= <span class="number">2</span> ? <span class="number">8</span></span><br><span class="line">                                     : _Bytes &lt;= <span class="number">4</span> ? <span class="number">4</span></span><br><span class="line">                                     : _Bytes &lt;= <span class="number">8</span> ? <span class="number">2</span></span><br><span class="line">                                                   : <span class="number">1</span>; <span class="comment">// elements per block (a power of 2)</span></span><br><span class="line"></span><br><span class="line">    _Deque_val() <span class="keyword">noexcept</span> : _Map(), _Mapsize(<span class="number">0</span>), _Myoff(<span class="number">0</span>), _Mysize(<span class="number">0</span>) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    size_type _Getblock(size_type _Off) <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="comment">// NB: _Mapsize and _Block_size are guaranteed to be powers of 2</span></span><br><span class="line">        <span class="keyword">return</span> (_Off / _Block_size) &amp; (_Mapsize - <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _Mapptr _Map; <span class="comment">// pointer to array of pointers to blocks</span></span><br><span class="line">    size_type _Mapsize; <span class="comment">// size of map array, zero or 2^N</span></span><br><span class="line">    size_type _Myoff; <span class="comment">// offset of initial element</span></span><br><span class="line">    size_type _Mysize; <span class="comment">// current length of sequence</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>从<code>_Deque_val</code>的源码中，我们可以清楚的知道后四个成员变量的作用</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">_Mapptr _Map; <span class="comment">// pointer to array of pointers to blocks</span></span><br><span class="line">size_type _Mapsize; <span class="comment">// size of map array, zero or 2^N</span></span><br><span class="line">size_type _Myoff; <span class="comment">// offset of initial element</span></span><br><span class="line">size_type _Mysize; <span class="comment">// current length of sequence</span></span><br></pre></td></tr></table></figure>
+
+<p>再跟进一下<code>_Container_base12</code>类</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">_Container_base12</span>;</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">_Container_proxy</span> &#123; <span class="comment">// store head of iterator chain and back pointer</span></span><br><span class="line">    _CONSTEXPR20 _Container_proxy() <span class="keyword">noexcept</span> = <span class="keyword">default</span>;</span><br><span class="line">    _CONSTEXPR20 _Container_proxy(_Container_base12* _Mycont_) <span class="keyword">noexcept</span> : _Mycont(_Mycont_) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> _Container_base12* _Mycont       = <span class="literal">nullptr</span>;</span><br><span class="line">    <span class="keyword">mutable</span> _Iterator_base12* _Myfirstiter = <span class="literal">nullptr</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">_Container_base12</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    _CONSTEXPR20 _Container_base12() <span class="keyword">noexcept</span> = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">    _Container_base12(<span class="type">const</span> _Container_base12&amp;)            = <span class="keyword">delete</span>;</span><br><span class="line">    _Container_base12&amp; <span class="keyword">operator</span>=(<span class="type">const</span> _Container_base12&amp;) = <span class="keyword">delete</span>;</span><br><span class="line"></span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Orphan_all() <span class="keyword">noexcept</span>;</span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Swap_proxy_and_iterators(_Container_base12&amp;) <span class="keyword">noexcept</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Alloc</span>&gt;</span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Alloc_proxy(_Alloc&amp;&amp; _Al) &#123;</span><br><span class="line">        _Container_proxy* <span class="type">const</span> _New_proxy = _Unfancy(_Al.<span class="built_in">allocate</span>(<span class="number">1</span>));</span><br><span class="line">        _Construct_in_place(*_New_proxy, <span class="keyword">this</span>);</span><br><span class="line">        _Myproxy            = _New_proxy;</span><br><span class="line">        _New_proxy-&gt;_Mycont = <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_Alloc</span>&gt;</span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Reload_proxy(_Alloc&amp;&amp; _Old_alloc, _Alloc&amp;&amp; _New_alloc) &#123;</span><br><span class="line">        <span class="comment">// pre: no iterators refer to the existing proxy</span></span><br><span class="line">        _Container_proxy* <span class="type">const</span> _New_proxy = _Unfancy(_New_alloc.<span class="built_in">allocate</span>(<span class="number">1</span>));</span><br><span class="line">        _Construct_in_place(*_New_proxy, <span class="keyword">this</span>);</span><br><span class="line">        _New_proxy-&gt;_Mycont = <span class="keyword">this</span>;</span><br><span class="line">        _Delete_plain_internal(_Old_alloc, _STD <span class="built_in">exchange</span>(_Myproxy, _New_proxy));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _Container_proxy* _Myproxy = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Orphan_all_unlocked_v3() <span class="keyword">noexcept</span>;</span><br><span class="line">    _CONSTEXPR20 <span class="type">void</span> _Swap_proxy_and_iterators_unlocked(_Container_base12&amp;) <span class="keyword">noexcept</span>;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> _Orphan_all_locked_v3() <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        _Lockit _Lock(_LOCK_DEBUG);</span><br><span class="line">        _Orphan_all_unlocked_v3();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> _Swap_proxy_and_iterators_locked(_Container_base12&amp; _Right) <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        _Lockit _Lock(_LOCK_DEBUG);</span><br><span class="line">        _Swap_proxy_and_iterators_unlocked(_Right);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>从这里我们可以<code>_Myproxy</code>是<code>_Container_base12</code>类的成员变量，是<code>_Container_proxy</code>的指针类型，<code>_Container_proxy</code>有两个变量：<code>_Mycont</code>、<code>_Myfirstiter</code>，一个是<code>container</code>的指针，一个是<code>iterator</code>的指针，至此，全部成员变量的作用就清晰明了了。</p>
+<h3 id="memory-management-2"><a href="#memory-management-2" class="headerlink" title="memory management"></a>memory management</h3><p>知道了<code>deque</code>成员变量的基本作用，我们可以开始通过常见的成员函数来了解<code>deque</code>的内存管理</p>
+<p><strong><code>push_back</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">push_back</span><span class="params">(_Ty&amp;&amp; _Val)</span> </span>&#123;</span><br><span class="line">    _Orphan_all();</span><br><span class="line">    _Emplace_back_internal(_STD <span class="built_in">move</span>(_Val));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>_Emplace_back_internal</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">   <span class="keyword">template</span> &lt;<span class="keyword">class</span>... _Tys&gt;</span><br><span class="line">    <span class="type">void</span> _Emplace_back_internal(_Tys&amp;&amp;... _Vals) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((_Myoff() + _Mysize()) % _Block_size == <span class="number">0</span> &amp;&amp; _Mapsize() &lt;= (_Mysize() + _Block_size) / _Block_size) &#123;</span><br><span class="line">            _Growmap(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        _Myoff() &amp;= _Mapsize() * _Block_size - <span class="number">1</span>;</span><br><span class="line">        size_type _Newoff = _Myoff() + _Mysize();</span><br><span class="line">        size_type _Block  = _Getblock(_Newoff);</span><br><span class="line">        <span class="keyword">if</span> (_Map()[_Block] == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            _Map()[_Block] = _Getal().<span class="built_in">allocate</span>(_Block_size);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        _Alty_traits::<span class="built_in">construct</span>(</span><br><span class="line">            _Getal(), _Unfancy(_Map()[_Block] + _Newoff % _Block_size), _STD forward&lt;_Tys&gt;(_Vals)...);</span><br><span class="line"></span><br><span class="line">        ++_Mysize();</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">/// ...</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/// _Deque_val</span></span><br><span class="line">    <span class="type">static</span> <span class="keyword">constexpr</span> <span class="type">int</span> _Block_size = _Bytes &lt;= <span class="number">1</span> ? <span class="number">16</span></span><br><span class="line">                                     : _Bytes &lt;= <span class="number">2</span> ? <span class="number">8</span></span><br><span class="line">                                     : _Bytes &lt;= <span class="number">4</span> ? <span class="number">4</span></span><br><span class="line">                                     : _Bytes &lt;= <span class="number">8</span> ? <span class="number">2</span></span><br><span class="line">                                                   : <span class="number">1</span>; <span class="comment">// elements per block (a power of 2)</span></span><br></pre></td></tr></table></figure>
+
+<p><code>_Block_size</code>在<code>_Deque_val</code>中定义，总是2的阶乘，默认构造初始化，<code>_Map</code>、<code>_Mapsize</code>、<code>_Myoff</code>、<code>_Mysize</code>都为0，所以会调用<code>_Growmap(1)</code></p>
+<p><code>_Growmap</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> _Growmap(size_type _Count) &#123; <span class="comment">// grow map by at least _Count pointers, _Mapsize() a power of 2</span></span><br><span class="line">    <span class="built_in">static_assert</span>(_Minimum_map_size &gt; <span class="number">1</span>, <span class="string">&quot;The _Xlen() test should always be performed.&quot;</span>);</span><br><span class="line"></span><br><span class="line">    _Alpty _Almap(_Getal());</span><br><span class="line">    size_type _Newsize = _Mapsize() &gt; <span class="number">0</span> ? _Mapsize() : <span class="number">1</span>;</span><br><span class="line">    <span class="comment">// class deque: static constexpr int _Minimum_map_size = 8;</span></span><br><span class="line">    <span class="keyword">while</span> (_Newsize - _Mapsize() &lt; _Count || _Newsize &lt; _Minimum_map_size) &#123;</span><br><span class="line">        <span class="comment">// scale _Newsize to 2^N &gt;= _Mapsize() + _Count</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">max_size</span>() / _Block_size - _Newsize &lt; _Newsize) &#123;</span><br><span class="line">            _Xlen(); <span class="comment">// result too long</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        _Newsize *= <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    _Count = _Newsize - _Mapsize();</span><br><span class="line"></span><br><span class="line">    size_type _Myboff = _Myoff() / _Block_size;</span><br><span class="line">    _Mapptr _Newmap   = _Almap.<span class="built_in">allocate</span>(_Mapsize() + _Count);</span><br><span class="line">    _Mapptr _Myptr    = _Newmap + _Myboff;</span><br><span class="line"></span><br><span class="line">    _Myptr = _STD <span class="built_in">uninitialized_copy</span>(_Map() + _Myboff, _Map() + _Mapsize(), _Myptr); <span class="comment">// copy initial to end</span></span><br><span class="line">    <span class="keyword">if</span> (_Myboff &lt;= _Count) &#123; <span class="comment">// increment greater than offset of initial block</span></span><br><span class="line">        _Myptr = _STD <span class="built_in">uninitialized_copy</span>(_Map(), _Map() + _Myboff, _Myptr); <span class="comment">// copy rest of old</span></span><br><span class="line">        _Uninitialized_value_construct_n_unchecked1(_Myptr, _Count - _Myboff); <span class="comment">// clear suffix of new</span></span><br><span class="line">        _Uninitialized_value_construct_n_unchecked1(_Newmap, _Myboff); <span class="comment">// clear prefix of new</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// increment not greater than offset of initial block</span></span><br><span class="line">        _STD <span class="built_in">uninitialized_copy</span>(_Map(), _Map() + _Count, _Myptr); <span class="comment">// copy more old</span></span><br><span class="line">        _Myptr = _STD <span class="built_in">uninitialized_copy</span>(_Map() + _Count, _Map() + _Myboff, _Newmap); <span class="comment">// copy rest of old</span></span><br><span class="line">        _Uninitialized_value_construct_n_unchecked1(_Myptr, _Count); <span class="comment">// clear rest to initial block</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_Map() != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        _Destroy_range(_Map(), _Map() + _Mapsize());</span><br><span class="line">        _Almap.<span class="built_in">deallocate</span>(_Map(), _Mapsize()); <span class="comment">// free storage for old</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _Map() = _Newmap; <span class="comment">// point at new</span></span><br><span class="line">    _Mapsize() += _Count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当<code>_Mapsize</code>的值为0，<code>_Newsize</code>取1，否则，<code>_Newsize</code>取<code>_Mapsize</code>的值。当<code>_Newsize</code>的值小于<code>_Minimum_map_size</code>也就是8的时候，并且<code>_Count</code>为1，所以<code>_Newsize</code>最后会取到8，<code>_Count</code>也会更新到8，然后开辟<code>_Mapsize + _Count</code>大小的<code>_Newmap</code>，然后copy原<code>_Map</code>上的内容到新<code>_Newmap</code>上，并通过<code>_Uninitialized_value_construct_n_unchecked1</code>根据<code>value_type</code>将其他新开辟的区域进行初始化，最后析构并释放原<code>_Map</code>，并更新<code>_Map</code>和<code>_Mapsize</code></p>
+<p><code>_Uninitialized_value_construct_n_unchecked1</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">_NoThrowFwdIt</span>, <span class="keyword">class</span> <span class="title class_">_Diff</span>&gt;</span><br><span class="line">_NoThrowFwdIt _Uninitialized_value_construct_n_unchecked1(_NoThrowFwdIt _UFirst, _Diff _Count) &#123;</span><br><span class="line">    <span class="comment">// value-initialize all elements in [_UFirst, _UFirst + _Count_raw)</span></span><br><span class="line">    _STL_INTERNAL_CHECK(_Count &gt;= <span class="number">0</span>);</span><br><span class="line">    <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(_Use_memset_value_construct_v&lt;_NoThrowFwdIt&gt;)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> _Zero_range(_UFirst, _UFirst + _Count);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        _Uninitialized_backout&lt;_NoThrowFwdIt&gt; _Backout&#123;_UFirst&#125;;</span><br><span class="line">        <span class="keyword">for</span> (; <span class="number">0</span> &lt; _Count; --_Count) &#123;</span><br><span class="line">            _Backout._Emplace_back();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> _Backout._Release();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据<code>value_type</code>进行零初始化或者默认构造，我们再回到<code>_Emplace_back_internal</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ...</span></span><br><span class="line">		_Myoff() &amp;= _Mapsize() * _Block_size - <span class="number">1</span>;</span><br><span class="line">        size_type _Newoff = _Myoff() + _Mysize();</span><br><span class="line">        size_type _Block  = _Getblock(_Newoff);</span><br><span class="line">        <span class="keyword">if</span> (_Map()[_Block] == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            _Map()[_Block] = _Getal().<span class="built_in">allocate</span>(_Block_size);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        _Alty_traits::<span class="built_in">construct</span>(</span><br><span class="line">            _Getal(), _Unfancy(_Map()[_Block] + _Newoff % _Block_size), _STD forward&lt;_Tys&gt;(_Vals)...);</span><br><span class="line"></span><br><span class="line">        ++_Mysize();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// _Getblock()</span></span><br><span class="line">    size_type _Getblock(size_type _Off) <span class="type">const</span> <span class="keyword">noexcept</span> &#123;</span><br><span class="line">        <span class="comment">// NB: _Mapsize and _Block_size are guaranteed to be powers of 2</span></span><br><span class="line">        <span class="keyword">return</span> (_Off / _Block_size) &amp; (_Mapsize - <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>_Myoff</code>获得当前所在的<code>元素</code>的位置，<code>_Newoff</code>获得下一个<code>元素</code>的位置，通过<code>_Getblock(_Newoff)</code>获得下一个元素<code>_Block</code>的位置，若<code>_Map[_Block]</code>此处未申请<code>_Block</code>，申请个<code>_Block</code>，并构造一个<code>value</code>，最后++<code>_Mysize</code></p>
+<p><strong><code>Push_front</code></strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">push_front</span><span class="params">(<span class="type">const</span> _Ty&amp; _Val)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">emplace_front</span>(_Val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>emplace_front</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span>... _Valty&gt;</span><br><span class="line"><span class="function"><span class="keyword">decltype</span>(<span class="keyword">auto</span>) <span class="title">emplace_front</span><span class="params">(_Valty&amp;&amp;... _Val)</span> </span>&#123;</span><br><span class="line">    _Orphan_all();</span><br><span class="line">    _Emplace_front_internal(_STD forward&lt;_Valty&gt;(_Val)...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>_Emplace_front_internal</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span>... _Tys&gt;</span><br><span class="line"><span class="type">void</span> _Emplace_front_internal(_Tys&amp;&amp;... _Vals) &#123;</span><br><span class="line">    <span class="keyword">if</span> (_Myoff() % _Block_size == <span class="number">0</span> &amp;&amp; _Mapsize() &lt;= (_Mysize() + _Block_size) / _Block_size) &#123;</span><br><span class="line">        _Growmap(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    _Myoff() &amp;= _Mapsize() * _Block_size - <span class="number">1</span>;</span><br><span class="line">    size_type _Newoff      = _Myoff() != <span class="number">0</span> ? _Myoff() : _Mapsize() * _Block_size;</span><br><span class="line">    <span class="type">const</span> size_type _Block = _Getblock(--_Newoff);</span><br><span class="line">    <span class="keyword">if</span> (_Map()[_Block] == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        _Map()[_Block] = _Getal().<span class="built_in">allocate</span>(_Block_size);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _Alty_traits::<span class="built_in">construct</span>(</span><br><span class="line">        _Getal(), _Unfancy(_Map()[_Block] + _Newoff % _Block_size), _STD forward&lt;_Tys&gt;(_Vals)...);</span><br><span class="line"></span><br><span class="line">    _Myoff() = _Newoff;</span><br><span class="line">    ++_Mysize();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>_Emplace_front_internal</code>实际上和<code>_Emplace_back_internal</code>差不多，<strong>但是当<code>_Myoff</code>值为0时，<code>_Newoff</code>就会赋值为最后一个<code>block</code>的最后一个位置</strong>。再<code>push_front</code>就相当于从后往前放置元素</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/08/04/dig%20into%20Windows%20Heap%20(1)/" rel="next" title="dig into Windows Heap (1)">
+                <i class="fa fa-chevron-left"></i> dig into Windows Heap (1)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2023/10/20/Machine-Learning/" rel="prev" title="Machine Learning">
+                Machine Learning <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/kano.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/enllus1on" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                friends
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.woodwhale.cn/" title="woodwhale" target="_blank">woodwhale</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://niyah.cn/" title="niyah" target="_blank">niyah</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.fup1p1.cn/" title="fup1p1" target="_blank">fup1p1</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://xunflash.top/" title="xunflash" target="_blank">xunflash</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.xuxblog.top/" title="xux" target="_blank">xux</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.k0nashi.cn/" title="k0nashi" target="_blank">k0nashi</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://goodlunatic.github.io/" title="lunatic" target="_blank">lunatic</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.bmth666.cn/bmth_blog/" title="bmth" target="_blank">bmth</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.csdn.net/weixin_52118017?type=blog" title="uuyjp" target="_blank">uuyjp</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://blog.bi0x.com/" title="Bi0x" target="_blank">Bi0x</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://124.221.19.214/" title="CHHHCHHOH" target="_blank">CHHHCHHOH</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://asal1n.github.io/" title="AsaL1n" target="_blank">AsaL1n</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.x1aoblog.top/" title="X1ao" target="_blank">X1ao</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://straw-233.github.io/" title="straw" target="_blank">straw</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#C-class"><span class="nav-number">1.</span> <span class="nav-text">C++ class</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#member-function-%E6%88%90%E5%91%98%E5%87%BD%E6%95%B0"><span class="nav-number">1.1.</span> <span class="nav-text">member function(成员函数)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ctor-dtor-%E6%9E%84%E9%80%A0-%E6%9E%90%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">ctor &amp; dtor(构造 &amp; 析构)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#inheritance-%E7%BB%A7%E6%89%BF"><span class="nav-number">1.3.</span> <span class="nav-text">inheritance(继承)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Polymorphism-%E5%A4%9A%E6%80%81"><span class="nav-number">1.4.</span> <span class="nav-text">Polymorphism(多态)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#class-internal"><span class="nav-number">1.5.</span> <span class="nav-text">class internal</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STL-internal-in-windows"><span class="nav-number">2.</span> <span class="nav-text">STL internal in windows</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#vector"><span class="nav-number">2.1.</span> <span class="nav-text">vector</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#memory-management"><span class="nav-number">2.1.1.</span> <span class="nav-text">memory  management</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#internal"><span class="nav-number">2.1.2.</span> <span class="nav-text">internal</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#string"><span class="nav-number">2.2.</span> <span class="nav-text">string</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#memory-management-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">memory management</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#internal-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">internal</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#deque"><span class="nav-number">2.3.</span> <span class="nav-text">deque</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#internal-2"><span class="nav-number">2.3.1.</span> <span class="nav-text">internal</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#memory-management-2"><span class="nav-number">2.3.2.</span> <span class="nav-text">memory management</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-[object Object]"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">enllus1on</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">24.4k</span>
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a></div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
